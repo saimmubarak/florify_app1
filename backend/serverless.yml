@@ -1,0 +1,57 @@
+service: florify-auth
+
+provider:
+  name: aws
+  runtime: python3.9
+  region: eu-north-1        # change to your region if needed
+  environment:
+    CLIENT_ID: 76i7it21omdm3n80nf9j9dc2oc
+    USER_POOL_ID: eu-north-1_i7vhr8PxH
+
+  iam:
+    role:
+      statements:
+        - Effect: "Allow"
+          Action:
+            - "cognito-idp:SignUp"
+            - "cognito-idp:ConfirmSignUp"
+            - "cognito-idp:ResendConfirmationCode"
+            - "cognito-idp:InitiateAuth"
+          Resource: "*"   # for prod, replace with the specific user pool ARN
+
+functions:
+  signup:
+    handler: signup_handler.handler
+    events:
+      - httpApi:
+          path: /signup
+          method: post
+
+  confirm:
+    handler: confirm_handler.handler
+    events:
+      - httpApi:
+          path: /confirm
+          method: post
+
+  resend:
+    handler: resend_handler.handler
+    events:
+      - httpApi:
+          path: /resend
+          method: post
+
+  login:
+    handler: login_handler.handler
+    events:
+      - httpApi:
+          path: /login
+          method: post
+
+plugins:
+  - serverless-python-requirements
+
+package:
+  exclude:
+    - node_modules/**
+    - .venv/**
