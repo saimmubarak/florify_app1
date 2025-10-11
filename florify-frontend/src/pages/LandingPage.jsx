@@ -12,6 +12,7 @@ function LandingPage({ onLogout, userEmail }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [isScrolled, setIsScrolled] = useState(false);
+  const [currentSeason, setCurrentSeason] = useState(0);
 
   // Handle scroll effects
   useEffect(() => {
@@ -25,6 +26,15 @@ function LandingPage({ onLogout, userEmail }) {
   // Fetch user's gardens on component mount
   useEffect(() => {
     fetchGardens();
+  }, []);
+
+  // Seasonal animation effect
+  useEffect(() => {
+    const seasons = ['🌸', '☀️', '🍂', '❄️'];
+    const interval = setInterval(() => {
+      setCurrentSeason(prev => (prev + 1) % seasons.length);
+    }, 2000);
+    return () => clearInterval(interval);
   }, []);
 
   const fetchGardens = async () => {
@@ -149,7 +159,9 @@ function LandingPage({ onLogout, userEmail }) {
           <div className="hero-image-container">
             <div className="hero-image">
               <div className="image-placeholder">
-                <span className="image-icon">🌱</span>
+                <div className="seasonal-icon">
+                  {['🌸', '☀️', '🍂', '❄️'][currentSeason]}
+                </div>
                 <p>Garden Planning Visual</p>
               </div>
             </div>
