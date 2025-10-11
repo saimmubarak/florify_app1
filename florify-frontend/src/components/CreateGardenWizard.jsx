@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Button from './Button';
 import InputField from './InputField';
-import AnimatedText from './AnimatedText';
+import TypewriterText from './TypewriterText';
 import config from '../config';
 import '../styles/garden-wizard.css';
 
@@ -9,20 +9,87 @@ const CreateGardenWizard = ({ onClose, onGardenCreated, userEmail }) => {
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState({
     name: '',
-    location: '',
     description: '',
+    location: '',
+    coordinates: null,
     image: null,
     imagePreview: null
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const mapRef = useRef(null);
+  const mapInstance = useRef(null);
+  const markerRef = useRef(null);
 
   const steps = [
-    { number: 1, title: 'Garden Name', description: 'Give your garden a memorable name' },
-    { number: 2, title: 'Location', description: 'Where is your garden located?' },
-    { number: 3, title: 'Photo', description: 'Add a photo of your garden' },
-    { number: 4, title: 'Review', description: 'Review and create your garden' }
+    { number: 1, title: 'Garden Details', description: 'Name and describe your garden' },
+    { number: 2, title: 'Location', description: 'Select your garden location on the map' },
+    { number: 3, title: 'Photo', description: 'Add a photo of your garden' }
   ];
+
+  // Initialize Google Maps
+  useEffect(() => {
+    if (currentStep === 2 && mapRef.current && !mapInstance.current) {
+      initMap();
+    }
+  }, [currentStep]);
+
+  const initMap = () => {
+    if (window.google && mapRef.current) {
+      mapInstance.current = new window.google.maps.Map(mapRef.current, {
+        center: { lat: 40.7128, lng: -74.0060 }, // Default to NYC
+        zoom: 13,
+        styles: [
+          {
+            featureType: 'all',
+            elementType: 'geometry.fill',
+            stylers: [{ color: '#f5f5f5' }]
+          },
+          {
+            featureType: 'water',
+            elementType: 'geometry',
+            stylers: [{ color: '#c9c9c9' }]
+          }
+        ]
+      });
+
+      // Add click listener to map
+      mapInstance.current.addListener('click', (event) => {
+        const lat = event.latLng.lat();
+        const lng = event.latLng.lng();
+        
+        // Remove existing marker
+        if (markerRef.current) {
+          markerRef.current.setMap(null);
+        }
+
+        // Add new marker
+        markerRef.current = new window.google.maps.Marker({
+          position: { lat, lng },
+          map: mapInstance.current,
+          title: 'Garden Location'
+        });
+
+        // Update form data
+        setFormData(prev => ({
+          ...prev,
+          coordinates: { lat, lng },
+          location: `${lat.toFixed(4)}, ${lng.toFixed(4)}`
+        }));
+
+        // Reverse geocoding to get address
+        const geocoder = new window.google.maps.Geocoder();
+        geocoder.geocode({ location: { lat, lng } }, (results, status) => {
+          if (status === 'OK' && results[0]) {
+            setFormData(prev => ({
+              ...prev,
+              location: results[0].formatted_address
+            }));
+          }
+        });
+      });
+    }
+  };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -71,18 +138,16 @@ const CreateGardenWizard = ({ onClose, onGardenCreated, userEmail }) => {
       case 1:
         return formData.name.trim().length >= 2;
       case 2:
-        return formData.location.trim().length >= 2;
+        return formData.coordinates !== null;
       case 3:
         return true; // Image is optional
-      case 4:
-        return formData.name.trim().length >= 2 && formData.location.trim().length >= 2;
       default:
         return false;
     }
   };
 
   const handleSubmit = async () => {
-    if (!validateStep(4)) {
+    if (!formData.name.trim() || !formData.coordinates) {
       setError('Please fill in all required fields');
       return;
     }
@@ -91,14 +156,14 @@ const CreateGardenWizard = ({ onClose, onGardenCreated, userEmail }) => {
     setError('');
 
     try {
-      const formDataToSend = new FormData();
-      formDataToSend.append('name', formData.name);
-      formDataToSend.append('location', formData.location);
-      formDataToSend.append('description', formData.description);
-      formDataToSend.append('userEmail', userEmail);
-      if (formData.image) {
-        formDataToSend.append('image', formData.image);
-      }
+      const gardenData = {
+        name: formData.name,
+        description: formData.description,
+        location: formData.location,
+        coordinates: formData.coordinates,
+        userEmail: userEmail,
+        imageUrl: formData.imagePreview || ''
+      };
 
       const response = await fetch(`${config.API_BASE_URL}/gardens`, {
         method: 'POST',
@@ -106,12 +171,7 @@ const CreateGardenWizard = ({ onClose, onGardenCreated, userEmail }) => {
           'Authorization': `Bearer ${localStorage.getItem('token') || 'mock-token'}`,
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({
-          name: formData.name,
-          location: formData.location,
-          description: formData.description,
-          userEmail: userEmail
-        })
+        body: JSON.stringify(gardenData)
       });
 
       if (response.ok) {
@@ -133,15 +193,15 @@ const CreateGardenWizard = ({ onClose, onGardenCreated, userEmail }) => {
       case 1:
         return (
           <div className="step-content">
-            <AnimatedText delay={100}>
+            <TypewriterText delay={100}>
               <h3 className="step-title">What would you like to call your garden?</h3>
-            </AnimatedText>
-            <AnimatedText delay={200}>
+            </TypewriterText>
+            <TypewriterText delay={200}>
               <p className="step-description">
                 Choose a name that reflects your garden's personality and purpose.
               </p>
-            </AnimatedText>
-            <AnimatedText delay={300}>
+            </TypewriterText>
+            <TypewriterText delay={300}>
               <div className="input-group">
                 <label className="input-label">Garden Name*</label>
                 <InputField
@@ -152,34 +212,8 @@ const CreateGardenWizard = ({ onClose, onGardenCreated, userEmail }) => {
                   onChange={handleInputChange}
                 />
               </div>
-            </AnimatedText>
-          </div>
-        );
-
-      case 2:
-        return (
-          <div className="step-content">
-            <AnimatedText delay={100}>
-              <h3 className="step-title">Where is your garden located?</h3>
-            </AnimatedText>
-            <AnimatedText delay={200}>
-              <p className="step-description">
-                This helps us provide location-specific gardening tips and track your garden's environment.
-              </p>
-            </AnimatedText>
-            <AnimatedText delay={300}>
-              <div className="input-group">
-                <label className="input-label">Location*</label>
-                <InputField
-                  type="text"
-                  name="location"
-                  placeholder="e.g., Backyard, Balcony, Community Garden, 123 Main St"
-                  value={formData.location}
-                  onChange={handleInputChange}
-                />
-              </div>
-            </AnimatedText>
-            <AnimatedText delay={400}>
+            </TypewriterText>
+            <TypewriterText delay={400}>
               <div className="input-group">
                 <label className="input-label">Description (Optional)</label>
                 <textarea
@@ -191,22 +225,46 @@ const CreateGardenWizard = ({ onClose, onGardenCreated, userEmail }) => {
                   rows="4"
                 />
               </div>
-            </AnimatedText>
+            </TypewriterText>
+          </div>
+        );
+
+      case 2:
+        return (
+          <div className="step-content">
+            <TypewriterText delay={100}>
+              <h3 className="step-title">Select your garden location</h3>
+            </TypewriterText>
+            <TypewriterText delay={200}>
+              <p className="step-description">
+                Click on the map to mark your garden's location. This helps us provide location-specific gardening tips.
+              </p>
+            </TypewriterText>
+            <TypewriterText delay={300}>
+              <div className="map-container">
+                <div ref={mapRef} className="map" />
+                {formData.location && (
+                  <div className="location-display">
+                    <strong>Selected Location:</strong> {formData.location}
+                  </div>
+                )}
+              </div>
+            </TypewriterText>
           </div>
         );
 
       case 3:
         return (
           <div className="step-content">
-            <AnimatedText delay={100}>
+            <TypewriterText delay={100}>
               <h3 className="step-title">Add a photo of your garden</h3>
-            </AnimatedText>
-            <AnimatedText delay={200}>
+            </TypewriterText>
+            <TypewriterText delay={200}>
               <p className="step-description">
                 A picture helps you track your garden's progress over time. This is optional but recommended.
               </p>
-            </AnimatedText>
-            <AnimatedText delay={300}>
+            </TypewriterText>
+            <TypewriterText delay={300}>
               <div className="image-upload-section">
                 {formData.imagePreview ? (
                   <div className="image-preview">
@@ -220,7 +278,7 @@ const CreateGardenWizard = ({ onClose, onGardenCreated, userEmail }) => {
                     </button>
                   </div>
                 ) : (
-                  <div className="image-upload-area">
+                  <div className="image-upload-area" onClick={() => document.getElementById('image-upload').click()}>
                     <div className="upload-icon">📷</div>
                     <p className="upload-text">Click to upload a photo</p>
                     <p className="upload-hint">PNG, JPG up to 5MB</p>
@@ -234,38 +292,7 @@ const CreateGardenWizard = ({ onClose, onGardenCreated, userEmail }) => {
                   </div>
                 )}
               </div>
-            </AnimatedText>
-          </div>
-        );
-
-      case 4:
-        return (
-          <div className="step-content">
-            <AnimatedText delay={100}>
-              <h3 className="step-title">Review your garden details</h3>
-            </AnimatedText>
-            <AnimatedText delay={200}>
-              <div className="review-section">
-                <div className="review-item">
-                  <label>Garden Name:</label>
-                  <span>{formData.name}</span>
-                </div>
-                <div className="review-item">
-                  <label>Location:</label>
-                  <span>{formData.location}</span>
-                </div>
-                {formData.description && (
-                  <div className="review-item">
-                    <label>Description:</label>
-                    <span>{formData.description}</span>
-                  </div>
-                )}
-                <div className="review-item">
-                  <label>Photo:</label>
-                  <span>{formData.image ? '✓ Uploaded' : 'No photo'}</span>
-                </div>
-              </div>
-            </AnimatedText>
+            </TypewriterText>
           </div>
         );
 
@@ -277,7 +304,9 @@ const CreateGardenWizard = ({ onClose, onGardenCreated, userEmail }) => {
   return (
     <div className="wizard-container">
       <div className="wizard-header">
-        <h2 className="wizard-title">Create Your Garden</h2>
+        <TypewriterText delay={100}>
+          <h2 className="wizard-title">CREATE YOUR GARDEN</h2>
+        </TypewriterText>
         <button className="close-btn" onClick={onClose}>×</button>
       </div>
 
@@ -301,7 +330,7 @@ const CreateGardenWizard = ({ onClose, onGardenCreated, userEmail }) => {
         <div className="wizard-actions">
           {currentStep > 1 && (
             <Button onClick={prevStep} className="secondary-btn">
-              ← Previous
+              ← PREVIOUS
             </Button>
           )}
           
@@ -311,15 +340,15 @@ const CreateGardenWizard = ({ onClose, onGardenCreated, userEmail }) => {
               disabled={!validateStep(currentStep)}
               className="primary-btn"
             >
-              Next →
+              NEXT →
             </Button>
           ) : (
             <Button 
               onClick={handleSubmit} 
-              disabled={loading || !validateStep(4)}
+              disabled={loading || !formData.name.trim() || !formData.coordinates}
               className="primary-btn"
             >
-              {loading ? 'Creating Garden...' : 'Create Garden 🌱'}
+              {loading ? 'CREATING GARDEN...' : 'CREATE GARDEN 🌱'}
             </Button>
           )}
         </div>

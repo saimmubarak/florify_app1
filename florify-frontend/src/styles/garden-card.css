@@ -2,13 +2,14 @@
 
 .garden-card {
   background: white;
-  border-radius: 16px;
+  border-radius: 20px;
   overflow: hidden;
-  box-shadow: 0 4px 20px rgba(20, 67, 69, 0.1);
-  transition: all 0.3s ease;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   cursor: pointer;
   border: 1px solid #f0f0f0;
   position: relative;
+  transform: translateY(0);
 }
 
 .garden-card:hover {
