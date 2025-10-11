@@ -1,10 +1,17 @@
-import React from "react";
-import "./Logo.css";
+import React, { useState, useEffect } from 'react';
 
-const Logo = ({ src = "/logo.png", size = 56, alt = "logo" }) => {
+const Logo = () => {
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    setVisible(true);
+  }, []);
+
   return (
-    <div>
-      <img src={src} alt={alt} style={{ width: size, height: size }} />
+    <div className={`logo-container ${visible ? 'visible' : ''}`}>
+      <div className="logo-box">
+        <div className="logo-text">FLORIFY</div>
+      </div>
     </div>
   );
 };

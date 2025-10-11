@@ -1,18 +1,35 @@
-import React from "react";
-import { Routes, Route } from "react-router-dom";
-import SignupPage from "./pages/SignupPage.jsx";
-import LoginPage from "./pages/LoginPage.jsx";
-import LandingPage from "./pages/LandingPage.jsx";
+import React, { useState } from 'react';
+import LoginPage from './pages/LoginPage';
+import SignupPage from './pages/SignupPage';
+import EmailConfirmationPage from './pages/EmailConfirmationPage';
+import LandingPage from './pages/LandingPage'; // ✅ new import
 
-const App = () => {
+function App() {
+  const [currentPage, setCurrentPage] = useState('login');
+  const [userEmail, setUserEmail] = useState('');
+
+  const navigate = (page, email = '') => {
+    setCurrentPage(page);
+    if (email) setUserEmail(email);
+  };
+
+  const handleLogout = () => {
+    setCurrentPage('login');
+    setUserEmail('');
+  };
+
   return (
-    <Routes>
-      <Route path="/" element={<SignupPage />} />
-      <Route path="/signup" element={<SignupPage />} />
-      <Route path="/login" element={<LoginPage />} />
-      <Route path="/landing" element={<LandingPage />} />
-    </Routes>
+    <>
+      {currentPage === 'login' && <LoginPage onNavigate={navigate} />}
+      {currentPage === 'signup' && <SignupPage onNavigate={navigate} />}
+      {currentPage === 'confirm' && (
+        <EmailConfirmationPage onNavigate={navigate} email={userEmail} />
+      )}
+      {currentPage === 'landing' && (
+        <LandingPage onLogout={handleLogout} userEmail={userEmail} />
+      )}
+    </>
   );
-};
+}
 
 export default App;
