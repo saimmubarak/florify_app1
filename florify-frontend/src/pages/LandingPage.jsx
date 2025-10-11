@@ -30,12 +30,21 @@ function LandingPage({ onLogout, userEmail }) {
 
   // Seasonal animation effect
   useEffect(() => {
-    const seasons = ['🌸', '☀️', '🍂', '❄️'];
     const interval = setInterval(() => {
-      setCurrentSeason(prev => (prev + 1) % seasons.length);
-    }, 2000);
+      setCurrentSeason(prev => (prev + 1) % 4);
+    }, 3000); // 3 seconds per season
     return () => clearInterval(interval);
   }, []);
+
+  // Seasonal images array
+  const seasonalImages = [
+    '/images/seasons/spring.jpg',
+    '/images/seasons/summer.jpg', 
+    '/images/seasons/fall.jpg',
+    '/images/seasons/winter.jpg'
+  ];
+
+  const seasonalIcons = ['🌸', '☀️', '🍂', '❄️'];
 
   const fetchGardens = async () => {
     try {
@@ -158,11 +167,18 @@ function LandingPage({ onLogout, userEmail }) {
           {/* Hero Image */}
           <div className="hero-image-container">
             <div className="hero-image">
-              <div className="image-placeholder">
-                <div className="seasonal-icon">
-                  {['🌸', '☀️', '🍂', '❄️'][currentSeason]}
+              <div className="seasonal-image-container">
+                <img 
+                  src={seasonalImages[currentSeason]} 
+                  alt={`Seasonal garden - ${['Spring', 'Summer', 'Fall', 'Winter'][currentSeason]}`}
+                  className="seasonal-image"
+                />
+                <div className="seasonal-overlay">
+                  <div className="seasonal-icon">
+                    {seasonalIcons[currentSeason]}
+                  </div>
+                  <p>Garden Planning Visual</p>
                 </div>
-                <p>Garden Planning Visual</p>
               </div>
             </div>
           </div>
