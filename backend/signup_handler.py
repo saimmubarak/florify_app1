@@ -1,25 +1,66 @@
-import boto3, json, os
+import json
+import boto3
+import os
+from botocore.exceptions import ClientError
 
 client = boto3.client("cognito-idp")
 
+def cors_headers():
+    return {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "OPTIONS,POST,GET",
+        "Access-Control-Allow-Headers": "Content-Type"
+    }
+
+def respond(status, body):
+    return {
+        "statusCode": status,
+        "headers": cors_headers(),
+        "body": json.dumps(body)
+    }
+
 def handler(event, context):
-    body = json.loads(event["body"])
+    # Handle CORS preflight
+    if event.get("requestContext", {}).get("http", {}).get("method") == "OPTIONS":
+        return respond(200, {"message": "CORS preflight"})
 
-    # simple password check
-    password = body["password"]
-    if not any(c.isupper() for c in password):
-        return {"statusCode": 400, "body": json.dumps({"error": "Password must have an uppercase letter"})}
-    if not any(c in "!@#$%^&*()-_=+" for c in password):
-        return {"statusCode": 400, "body": json.dumps({"error": "Password must have a special character"})}
+    try:
+        body = json.loads(event.get("body", "{}"))
+    except Exception:
+        return respond(400, {"message": "Invalid JSON body"})
 
-    response = client.sign_up(
-        ClientId=os.environ["CLIENT_ID"],
-        Username=body["email"],
-        Password=password,
-        UserAttributes=[
-            {"Name": "email", "Value": body["email"]},
-            {"Name": "name", "Value": body["name"]}
-        ]
-    )
+    name = body.get("name")
+    email = body.get("email")
+    password = body.get("password")
 
-    return {"statusCode": 200, "body": json.dumps({"message": "User signed up", "response": response})}
+    if not all([name, email, password]):
+        return respond(400, {"message": "All fields are required"})
+
+    try:
+        response = client.sign_up(
+            ClientId=os.environ["CLIENT_ID"],
+            Username=email,
+            Password=password,
+            UserAttributes=[
+                {"Name": "name", "Value": name},
+                {"Name": "email", "Value": email}
+            ]
+        )
+        return respond(200, {"message": "Signup successful! Please verify your email."})
+
+    except client.exceptions.UsernameExistsException:
+        return respond(400, {"message": "This email is already registered."})
+
+    except client.exceptions.InvalidPasswordException:
+        return respond(400, {"message": "Password does not meet complexity requirements."})
+
+    except client.exceptions.InvalidParameterException as e:
+        return respond(400, {"message": str(e)})
+
+    except ClientError as e:
+        error = e.response["Error"]
+        return respond(400, {"message": error.get("Message", "Unknown Cognito error")})
+
+    except Exception as e:
+        print("Unexpected error:", str(e))
+        return respond(500, {"message": "Internal server error"})

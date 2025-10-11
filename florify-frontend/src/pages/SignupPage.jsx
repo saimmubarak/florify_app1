@@ -1,91 +1,151 @@
-// src/pages/SignupPage.jsx
-import React, { useState } from "react";
-//import "./SignupPage.css";
-import Logo from "../components/Logo";
-import InputField from "../components/InputField";
-import Button from "../components/Button";
-import AnimatedText from "../components/AnimatedText";
-import AnimatedImage from "../components/AnimatedImage";
-import Popup from "../components/Popup";
+import React, { useState } from 'react';
+import AuthLayout from '../components/AuthLayout';
+import AnimatedText from '../components/AnimatedText';
+import InputField from '../components/InputField';
+import Button from '../components/Button';
+import config from '../config';
 
-const SignupPage = () => {
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [popupMessage, setPopupMessage] = useState("");
+const SignupPage = ({ onNavigate }) => {
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    password: ''
+  });
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleSignup = (e) => {
-    e?.preventDefault?.();
-    setPopupMessage("Signup functionality not wired in this snippet.");
-    setTimeout(() => setPopupMessage(""), 2000);
+  const handleChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value
+    });
+    setError('');
+  };
+
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter') {
+      handleSubmit();
+    }
+  };
+
+  const validatePassword = (password) => {
+    if (password.length < 8) {
+      return 'Password must be at least 8 characters';
+    }
+    if (!/[A-Z]/.test(password)) {
+      return 'Password must include an uppercase letter';
+    }
+    if (!/[!@#$%^&*()-_=+]/.test(password)) {
+      return 'Password must include a special character';
+    }
+    return null;
+  };
+
+  const handleSubmit = async () => {
+    if (!formData.name || !formData.email || !formData.password) {
+      setError('Please fill in all fields');
+      return;
+    }
+
+    const passwordError = validatePassword(formData.password);
+    if (passwordError) {
+      setError(passwordError);
+      return;
+    }
+
+    setLoading(true);
+    setError('');
+
+    try {
+      const response = await fetch(config.SIGNUP_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData)
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        alert('Signup successful! Please verify your email.');
+        onNavigate('confirm', formData.email);
+      } else {
+        setError(data.message || 'Signup failed');
+      }
+    } catch (err) {
+      setError('Network error. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <div className="page-wrapper">
-      <div className="container">
-        <div className="left-side">
-          <div className="logo-float">
-            <Logo src="/logo.png" size={56} />
-          </div>
+    <AuthLayout>
+      <AnimatedText delay={100}>
+        <h1 className="auth-title">Create your account</h1>
+      </AnimatedText>
 
-          <div className="form" role="form" aria-label="Signup form">
-            <h1 className="animated-heading">
-              <AnimatedText text="Create your account" />
-            </h1>
-            <p className="lead">Join us — clean, modern signup.</p>
+      <AnimatedText delay={200}>
+        <p className="auth-subtitle">Let's get started with your journey</p>
+      </AnimatedText>
 
-            <form onSubmit={handleSignup}>
-              <div className="field">
-                <label className="field-label">Name</label>
-                <InputField
-                  className="input"
-                  type="text"
-                  placeholder="Enter your name"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                />
-              </div>
+      <div className="auth-form">
+        <AnimatedText delay={300}>
+          <label className="input-label">Name*</label>
+          <InputField
+            type="text"
+            name="name"
+            placeholder="Enter your name"
+            value={formData.name}
+            onChange={handleChange}
+            onKeyPress={handleKeyPress}
+          />
+        </AnimatedText>
 
-              <div className="field">
-                <label className="field-label">Email</label>
-                <InputField
-                  className="input"
-                  type="email"
-                  placeholder="Enter your email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                />
-              </div>
+        <AnimatedText delay={400}>
+          <label className="input-label">Email*</label>
+          <InputField
+            type="email"
+            name="email"
+            placeholder="Enter your email"
+            value={formData.email}
+            onChange={handleChange}
+            onKeyPress={handleKeyPress}
+          />
+        </AnimatedText>
 
-              <div className="field">
-                <label className="field-label">Password</label>
-                <InputField
-                  className="input"
-                  type="password"
-                  placeholder="Enter your password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                />
-              </div>
+        <AnimatedText delay={500}>
+          <label className="input-label">Password*</label>
+          <InputField
+            type="password"
+            name="password"
+            placeholder="Enter your password"
+            value={formData.password}
+            onChange={handleChange}
+            onKeyPress={handleKeyPress}
+          />
+          <p className="password-hint">
+            Password must be at least 8 characters with uppercase and special character
+          </p>
+        </AnimatedText>
 
-              <div className="button-row">
-                <Button text="Sign Up" onClick={handleSignup} />
-              </div>
-            </form>
+        {error && <div className="error-message">{error}</div>}
 
-            <p className="small-note">
-              Already have an account? <a href="/login">Log in</a>
-            </p>
-          </div>
-        </div>
+        <AnimatedText delay={600}>
+          <Button onClick={handleSubmit} disabled={loading}>
+            {loading ? 'Creating Account...' : 'Sign Up'}
+          </Button>
+        </AnimatedText>
 
-        <div className="right-side">
-          <AnimatedImage src="/signup-img.jpg" alt="Signup Illustration" />
-        </div>
+        <AnimatedText delay={700}>
+          <p className="auth-link">
+            Already have an account?{' '}
+            <a onClick={() => onNavigate('login')} style={{ cursor: 'pointer' }}>
+              Log in
+            </a>
+          </p>
+        </AnimatedText>
       </div>
-
-      <Popup message={popupMessage} onClose={() => setPopupMessage("")} />
-    </div>
+    </AuthLayout>
   );
 };
 

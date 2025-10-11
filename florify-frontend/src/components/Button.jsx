@@ -1,10 +1,13 @@
-import React from "react";
-import "./Button.css"; // ensure it contains .custom-btn styles provided earlier
+import React from 'react';
 
-const Button = ({ text, onClick, type = "button" }) => {
+const Button = ({ children, onClick, disabled = false }) => {
   return (
-    <button type={type} className="custom-btn" onClick={onClick}>
-      <span>{text}</span>
+    <button
+      onClick={onClick}
+      className="primary-button"
+      disabled={disabled}
+    >
+      <span>{children}</span>
     </button>
   );
 };

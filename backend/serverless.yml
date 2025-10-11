@@ -3,21 +3,34 @@ service: florify-auth
 provider:
   name: aws
   runtime: python3.9
-  region: eu-north-1        # change to your region if needed
+  region: eu-north-1
   environment:
     CLIENT_ID: 76i7it21omdm3n80nf9j9dc2oc
     USER_POOL_ID: eu-north-1_i7vhr8PxH
-
   iam:
     role:
       statements:
         - Effect: "Allow"
           Action:
-            - "cognito-idp:SignUp"
-            - "cognito-idp:ConfirmSignUp"
-            - "cognito-idp:ResendConfirmationCode"
-            - "cognito-idp:InitiateAuth"
-          Resource: "*"   # for prod, replace with the specific user pool ARN
+            - cognito-idp:SignUp
+            - cognito-idp:ConfirmSignUp
+            - cognito-idp:ResendConfirmationCode
+            - cognito-idp:InitiateAuth
+          Resource: "*"
+
+  httpApi:
+    cors:
+      allowedOrigins:
+        - "http://localhost:5173"
+        - "*"  # you can remove this after testing
+      allowedHeaders:
+        - Content-Type
+        - Authorization
+      allowedMethods:
+        - GET
+        - POST
+        - OPTIONS
+      allowCredentials: false
 
 functions:
   signup:

@@ -1,74 +1,127 @@
-import React, { useState } from "react";
-import Logo from "../components/Logo";
-import InputField from "../components/InputField";
-import Button from "../components/Button";
-import AnimatedText from "../components/AnimatedText";
-import AnimatedImage from "../components/AnimatedImage";
-import Popup from "../components/Popup";
-import { login } from "../api/auth";
-import { useNavigate } from "react-router-dom";
-import "./LoginPage.css";
+import React, { useState } from 'react';
+import AuthLayout from '../components/AuthLayout';
+import AnimatedText from '../components/AnimatedText';
+import InputField from '../components/InputField';
+import Button from '../components/Button';
+import config from '../config';
 
-const LoginPage = () => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [popupMessage, setPopupMessage] = useState("");
-  const navigate = useNavigate();
+const LoginPage = ({ onNavigate }) => {
+  const [formData, setFormData] = useState({
+    email: '',
+    password: ''
+  });
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleLogin = async () => {
+  const handleChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value
+    });
+    setError('');
+  };
+
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter') {
+      handleSubmit();
+    }
+  };
+
+  const handleSubmit = async () => {
+    if (!formData.email || !formData.password) {
+      setError('Please fill in all fields');
+      return;
+    }
+
+    setLoading(true);
+    setError('');
+
     try {
-      const res = await login({email, password});
-      if (res.error) {
-        setPopupMessage(res.error);
-      } else {
-        setPopupMessage("Login successful!");
-        setTimeout(() => navigate("/landing"), 1000); // Redirect after short delay
+      const response = await fetch(config.LOGIN_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: formData.email,
+          password: formData.password
+        }),
+      });
+
+      // Parse JSON safely even if response is empty
+      const data = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        setError(data.message || 'Login failed. Please try again.');
+        setLoading(false);
+        return;
       }
+
+      alert('✅ Login successful!');
+      onNavigate('landing', formData.email);
+
     } catch (err) {
-      setPopupMessage("Login failed. Please try again.");
+      console.error('Network error:', err);
+      setError('Unable to connect to the server. Please check your connection.');
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="container">
-      {/* Left side */}
-      <div className="left-side">
-        <Logo src="/logo.png" />
-        <div className="form">
-          <AnimatedText text="Welcome Back" />
+    <AuthLayout>
+      <AnimatedText delay={100}>
+        <h1 className="auth-title">Welcome Back</h1>
+      </AnimatedText>
 
+      <AnimatedText delay={200}>
+        <p className="auth-subtitle">Please login to your account</p>
+      </AnimatedText>
+
+      <div className="auth-form">
+        <AnimatedText delay={300}>
+          <label className="input-label">Email*</label>
           <InputField
             type="email"
+            name="email"
             placeholder="Enter your email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            value={formData.email}
+            onChange={handleChange}
+            onKeyPress={handleKeyPress}
           />
+        </AnimatedText>
+
+        <AnimatedText delay={400}>
+          <label className="input-label">Password*</label>
           <InputField
             type="password"
+            name="password"
             placeholder="Enter your password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            value={formData.password}
+            onChange={handleChange}
+            onKeyPress={handleKeyPress}
           />
+        </AnimatedText>
 
-          <Button text="Log In" onClick={handleLogin} />
+        {error && <div className="error-message">{error}</div>}
 
-          <p style={{ marginTop: "1rem" }}>
-            Don’t have an account?{" "}
-            <a href="/signup" style={{ color: "#144345" }}>
-              Sign Up
+        <AnimatedText delay={500}>
+          <Button onClick={handleSubmit} disabled={loading}>
+            {loading ? 'Logging in...' : 'Login'}
+          </Button>
+        </AnimatedText>
+
+        <AnimatedText delay={600}>
+          <p className="auth-link">
+            Don't have an account?{' '}
+            <a
+              onClick={() => onNavigate('signup')}
+              style={{ cursor: 'pointer' }}
+            >
+              Sign up
             </a>
           </p>
-        </div>
+        </AnimatedText>
       </div>
-
-      {/* Right side */}
-      <div className="right-side">
-        <AnimatedImage src="/login-img.jpg" alt="Login Illustration" />
-      </div>
-
-      {/* Popup for errors/success */}
-      <Popup message={popupMessage} onClose={() => setPopupMessage("")} />
-    </div>
+    </AuthLayout>
   );
 };
 
