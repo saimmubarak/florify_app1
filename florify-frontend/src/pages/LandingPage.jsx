@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Button from '../components/Button';
-import AnimatedText from '../components/AnimatedText';
+import TypewriterText from '../components/TypewriterText';
 import CreateGardenWizard from '../components/CreateGardenWizard';
 import GardenCard from '../components/GardenCard';
 import config from '../config';
@@ -11,6 +11,16 @@ function LandingPage({ onLogout, userEmail }) {
   const [gardens, setGardens] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  // Handle scroll effects
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 50);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   // Fetch user's gardens on component mount
   useEffect(() => {
@@ -24,7 +34,7 @@ function LandingPage({ onLogout, userEmail }) {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token') || 'mock-token'}` // Mock token for testing
+          'Authorization': `Bearer ${localStorage.getItem('token') || 'mock-token'}`
         }
       });
 
@@ -47,88 +57,154 @@ function LandingPage({ onLogout, userEmail }) {
   };
 
   const handleGardenClick = (gardenId) => {
-    // Navigate to garden detail view (to be implemented)
     console.log('Navigate to garden:', gardenId);
   };
 
+  const navbarLinks = [
+    { text: 'ADD GARDEN', action: () => setShowWizard(true) },
+    { text: 'YOUR GARDENS', action: () => document.getElementById('gardens-section')?.scrollIntoView({ behavior: 'smooth' }) },
+    { text: 'INSPIRATION', action: () => console.log('Inspiration clicked') },
+    { text: 'TIPS', action: () => console.log('Tips clicked') }
+  ];
+
   return (
     <div className="landing-container">
-      {/* Header */}
-      <header className="landing-header">
-        <div className="header-content">
-          <div className="logo-section">
-            <h1 className="app-title">Florify 🌸</h1>
-            <p className="welcome-text">Welcome back, {userEmail?.split('@')[0]}!</p>
-          </div>
-          <button className="logout-btn" onClick={onLogout}>
-            Log Out
-          </button>
-        </div>
-      </header>
+      {/* Background Grid */}
+      <div className="background-grid"></div>
 
-      {/* Main Content */}
-      <main className="landing-main">
-        <div className="landing-content">
-          {/* Hero Section */}
-          <section className="hero-section">
-            <AnimatedText delay={100}>
-              <h2 className="hero-title">Create Your Garden Paradise</h2>
-            </AnimatedText>
-            <AnimatedText delay={200}>
-              <p className="hero-subtitle">
-                Transform your space into a beautiful garden. Track, manage, and watch your plants grow.
-              </p>
-            </AnimatedText>
-            <AnimatedText delay={300}>
-              <Button 
-                onClick={() => setShowWizard(true)}
-                className="create-garden-btn"
+      {/* Floating Logo */}
+      <div className={`floating-logo ${isScrolled ? 'scrolled' : ''}`}>
+        <div className="logo-box">
+          <span className="logo-text">FLORIFY</span>
+        </div>
+      </div>
+
+      {/* Floating Navbar */}
+      <nav className={`floating-navbar ${isScrolled ? 'scrolled' : ''}`}>
+        <div className="navbar-content">
+          {navbarLinks.map((link, index) => (
+            <TypewriterText
+              key={link.text}
+              text={link.text}
+              delay={index * 200}
+              className="navbar-link"
+              onClick={link.action}
+            />
+          ))}
+        </div>
+        <button className="logout-btn" onClick={onLogout}>
+          LOGOUT
+        </button>
+      </nav>
+
+      {/* Hero Section */}
+      <section className="hero-section">
+        <div className="hero-content">
+          <div className="hero-text">
+            {/* Tagline */}
+            <div className="tagline-container">
+              <TypewriterText
+                text="Leading AI based Garden Planner"
+                delay={500}
+                className="tagline"
+              />
+            </div>
+
+            {/* Main Headline */}
+            <h1 className="main-headline">
+              <TypewriterText
+                text="WE HELP YOU PLAN GARDENS THAT ARE FUNCTIONAL AND BEAUTIFUL"
+                delay={800}
+                className="headline-text"
+              />
+            </h1>
+
+            {/* Subtext */}
+            <p className="hero-subtext">
+              <TypewriterText
+                text="Tell us more about your garden so that our AI model plans the garden tailor made for you."
+                delay={1200}
+                className="subtext-content"
+              />
+            </p>
+
+            {/* CTA Button */}
+            <div className="cta-container">
+              <TypewriterText
+                text=""
+                delay={1500}
+                className="cta-wrapper"
               >
-                🌱 Create Your Garden
-              </Button>
-            </AnimatedText>
-          </section>
-
-          {/* Gardens Section */}
-          <section className="gardens-section">
-            <AnimatedText delay={400}>
-              <h3 className="section-title">Your Gardens</h3>
-            </AnimatedText>
-            
-            {loading ? (
-              <div className="loading-state">
-                <div className="loading-spinner"></div>
-                <p>Loading your gardens...</p>
-              </div>
-            ) : error ? (
-              <div className="error-state">
-                <p>{error}</p>
-                <Button onClick={fetchGardens}>Retry</Button>
-              </div>
-            ) : gardens.length === 0 ? (
-              <div className="empty-state">
-                <div className="empty-icon">🌱</div>
-                <h4>No gardens yet</h4>
-                <p>Create your first garden to get started!</p>
-                <Button onClick={() => setShowWizard(true)}>
-                  Create Your First Garden
+                <Button 
+                  onClick={() => setShowWizard(true)}
+                  className="create-garden-cta"
+                >
+                  CREATE GARDEN
                 </Button>
+              </TypewriterText>
+            </div>
+          </div>
+
+          {/* Hero Image */}
+          <div className="hero-image-container">
+            <div className="hero-image">
+              <div className="image-placeholder">
+                <span className="image-icon">🌱</span>
+                <p>Garden Planning Visual</p>
               </div>
-            ) : (
-              <div className="gardens-grid">
-                {gardens.map((garden, index) => (
-                  <AnimatedText key={garden.id} delay={500 + (index * 100)}>
-                    <GardenCard 
-                      garden={garden} 
-                      onClick={() => handleGardenClick(garden.id)}
-                    />
-                  </AnimatedText>
-                ))}
-              </div>
-            )}
-          </section>
+            </div>
+          </div>
         </div>
-      </main>
+      </section>
+
+      {/* Gardens Section */}
+      <section id="gardens-section" className="gardens-section">
+        <div className="gardens-container">
+          <h2 className="gardens-title">
+            <TypewriterText
+              text="YOUR GARDENS"
+              delay={2000}
+              className="section-title-text"
+            />
+          </h2>
+          
+          {loading ? (
+            <div className="loading-state">
+              <div className="loading-spinner"></div>
+              <p>Loading your gardens...</p>
+            </div>
+          ) : error ? (
+            <div className="error-state">
+              <p>{error}</p>
+              <Button onClick={fetchGardens}>Retry</Button>
+            </div>
+          ) : gardens.length === 0 ? (
+            <div className="empty-state">
+              <div className="empty-icon">🌱</div>
+              <h4>No gardens yet</h4>
+              <p>Create your first garden to get started!</p>
+              <Button onClick={() => setShowWizard(true)}>
+                CREATE YOUR FIRST GARDEN
+              </Button>
+            </div>
+          ) : (
+            <div className="gardens-grid">
+              {gardens.map((garden, index) => (
+                <div
+                  key={garden.gardenId || garden.id}
+                  className="garden-card-wrapper"
+                  style={{ animationDelay: `${index * 0.1}s` }}
+                >
+                  <GardenCard 
+                    garden={garden} 
+                    onClick={() => handleGardenClick(garden.gardenId || garden.id)}
+                  />
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </section>
 
       {/* Create Garden Wizard Modal */}
       {showWizard && (
