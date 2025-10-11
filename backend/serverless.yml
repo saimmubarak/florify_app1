@@ -4,11 +4,12 @@ provider:
   name: aws
   runtime: python3.9
   region: eu-north-1
+  stage: ${opt:stage, 'dev'}
   environment:
     CLIENT_ID: 76i7it21omdm3n80nf9j9dc2oc
     USER_POOL_ID: eu-north-1_i7vhr8PxH
     GARDENS_TABLE_NAME: ${self:service}-gardens-${self:provider.stage}
-    S3_BUCKET_NAME: ${self:service}-garden-images-${self:provider.stage}
+    S3_BUCKET_NAME: blankcanvas-images-${self:provider.stage}
   iam:
     role:
       statements:
@@ -35,7 +36,7 @@ provider:
             - s3:GetObject
             - s3:PutObject
             - s3:DeleteObject
-          Resource: "arn:aws:s3:::${self:service}-garden-images-${self:provider.stage}/*"
+          Resource: "arn:aws:s3:::blankcanvas-images-${self:provider.stage}/*"
 
   httpApi:
     cors:
@@ -118,7 +119,7 @@ resources:
     GardenImagesBucket:
       Type: AWS::S3::Bucket
       Properties:
-        BucketName: ${self:service}-garden-images-${self:provider.stage}
+        BucketName: blankcanvas-images-${self:provider.stage}
         CorsConfiguration:
           CorsRules:
             - AllowedHeaders: ['*']
