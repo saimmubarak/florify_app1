@@ -7,6 +7,8 @@ provider:
   environment:
     CLIENT_ID: 76i7it21omdm3n80nf9j9dc2oc
     USER_POOL_ID: eu-north-1_i7vhr8PxH
+    GARDENS_TABLE_NAME: ${self:service}-gardens-${self:provider.stage}
+    S3_BUCKET_NAME: ${self:service}-garden-images-${self:provider.stage}
   iam:
     role:
       statements:
@@ -17,6 +19,23 @@ provider:
             - cognito-idp:ResendConfirmationCode
             - cognito-idp:InitiateAuth
           Resource: "*"
+        - Effect: "Allow"
+          Action:
+            - dynamodb:Query
+            - dynamodb:Scan
+            - dynamodb:GetItem
+            - dynamodb:PutItem
+            - dynamodb:UpdateItem
+            - dynamodb:DeleteItem
+          Resource: 
+            - "arn:aws:dynamodb:${self:provider.region}:*:table/${self:service}-gardens-${self:provider.stage}"
+            - "arn:aws:dynamodb:${self:provider.region}:*:table/${self:service}-gardens-${self:provider.stage}/index/*"
+        - Effect: "Allow"
+          Action:
+            - s3:GetObject
+            - s3:PutObject
+            - s3:DeleteObject
+          Resource: "arn:aws:s3:::${self:service}-garden-images-${self:provider.stage}/*"
 
   httpApi:
     cors:
@@ -29,6 +48,8 @@ provider:
       allowedMethods:
         - GET
         - POST
+        - PUT
+        - DELETE
         - OPTIONS
       allowCredentials: false
 
@@ -60,6 +81,50 @@ functions:
       - httpApi:
           path: /login
           method: post
+
+  gardens:
+    handler: gardens_handler.handler
+    events:
+      - httpApi:
+          path: /gardens
+          method: get
+      - httpApi:
+          path: /gardens
+          method: post
+
+resources:
+  Resources:
+    GardensTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:service}-gardens-${self:provider.stage}
+        AttributeDefinitions:
+          - AttributeName: gardenId
+            AttributeType: S
+          - AttributeName: userEmail
+            AttributeType: S
+        KeySchema:
+          - AttributeName: gardenId
+            KeyType: HASH
+        GlobalSecondaryIndexes:
+          - IndexName: UserEmailIndex
+            KeySchema:
+              - AttributeName: userEmail
+                KeyType: HASH
+            Projection:
+              ProjectionType: ALL
+        BillingMode: PAY_PER_REQUEST
+
+    GardenImagesBucket:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: ${self:service}-garden-images-${self:provider.stage}
+        CorsConfiguration:
+          CorsRules:
+            - AllowedHeaders: ['*']
+              AllowedMethods: [GET, PUT, POST, DELETE, HEAD]
+              AllowedOrigins: ['*']
+              MaxAge: 3000
 
 plugins:
   - serverless-python-requirements
