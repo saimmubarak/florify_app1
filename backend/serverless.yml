@@ -138,13 +138,15 @@ resources:
     GardenImagesBucketPolicy:
       Type: AWS::S3::BucketPolicy
       Properties:
-        Bucket: !Ref GardenImagesBucket
+        Bucket: 
+          Ref: GardenImagesBucket
         PolicyDocument:
           Statement:
             - Effect: Allow
               Principal: "*"
               Action: "s3:GetObject"
-              Resource: !Sub "${GardenImagesBucket}/*"
+              Resource: 
+                Fn::Sub: "${GardenImagesBucket}/*"
 
 plugins:
   - serverless-python-requirements
