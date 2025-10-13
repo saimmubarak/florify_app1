@@ -129,7 +129,22 @@ resources:
               AllowedMethods: [GET, PUT, POST, DELETE, HEAD]
               AllowedOrigins: ['*']
               MaxAge: 3000
-        PublicReadAccess: true
+        PublicAccessBlockConfiguration:
+          BlockPublicAcls: false
+          BlockPublicPolicy: false
+          IgnorePublicAcls: false
+          RestrictPublicBuckets: false
+
+    GardenImagesBucketPolicy:
+      Type: AWS::S3::BucketPolicy
+      Properties:
+        Bucket: !Ref GardenImagesBucket
+        PolicyDocument:
+          Statement:
+            - Effect: Allow
+              Principal: "*"
+              Action: "s3:GetObject"
+              Resource: !Sub "${GardenImagesBucket}/*"
 
 plugins:
   - serverless-python-requirements
