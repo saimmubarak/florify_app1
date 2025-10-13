@@ -7,9 +7,11 @@ provider:
   stage: ${opt:stage, 'dev'}
   environment:
     CLIENT_ID: 76i7it21omdm3n80nf9j9dc2oc
-    USER_POOL_ID: eu-north-1_i7vhr8PxH
+    COGNITO_USER_POOL_ID: eu-north-1_i7vhr8PxH
+    COGNITO_REGION: eu-north-1
     GARDENS_TABLE_NAME: ${self:service}-gardens-${self:provider.stage}
-    S3_BUCKET_NAME: blankcanvas-images-${self:provider.stage}
+    S3_BUCKET_NAME: florify-garden-images-${self:provider.stage}
+    USER_ID_CLAIM: sub
   iam:
     role:
       statements:
@@ -35,8 +37,11 @@ provider:
           Action:
             - s3:GetObject
             - s3:PutObject
-            - s3:DeleteObject
-          Resource: "arn:aws:s3:::blankcanvas-images-${self:provider.stage}/*"
+            - s3:PutObjectAcl
+            - s3:ListBucket
+          Resource: 
+            - "arn:aws:s3:::florify-garden-images-${self:provider.stage}/*"
+            - "arn:aws:s3:::florify-garden-images-${self:provider.stage}"
 
   httpApi:
     cors:
@@ -92,6 +97,9 @@ functions:
       - httpApi:
           path: /gardens
           method: post
+      - httpApi:
+          path: /gardens/upload-url
+          method: get
 
 resources:
   Resources:
@@ -100,32 +108,28 @@ resources:
       Properties:
         TableName: ${self:service}-gardens-${self:provider.stage}
         AttributeDefinitions:
-          - AttributeName: gardenId
+          - AttributeName: userId
             AttributeType: S
-          - AttributeName: userEmail
+          - AttributeName: gardenId
             AttributeType: S
         KeySchema:
-          - AttributeName: gardenId
+          - AttributeName: userId
             KeyType: HASH
-        GlobalSecondaryIndexes:
-          - IndexName: UserEmailIndex
-            KeySchema:
-              - AttributeName: userEmail
-                KeyType: HASH
-            Projection:
-              ProjectionType: ALL
+          - AttributeName: gardenId
+            KeyType: RANGE
         BillingMode: PAY_PER_REQUEST
 
     GardenImagesBucket:
       Type: AWS::S3::Bucket
       Properties:
-        BucketName: blankcanvas-images-${self:provider.stage}
+        BucketName: florify-garden-images-${self:provider.stage}
         CorsConfiguration:
           CorsRules:
             - AllowedHeaders: ['*']
               AllowedMethods: [GET, PUT, POST, DELETE, HEAD]
               AllowedOrigins: ['*']
               MaxAge: 3000
+        PublicReadAccess: true
 
 plugins:
   - serverless-python-requirements

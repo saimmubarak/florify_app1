@@ -146,6 +146,57 @@ const CreateGardenWizard = ({ onClose, onGardenCreated, userEmail }) => {
     }
   };
 
+  const uploadImageToS3 = async (file, gardenId) => {
+    try {
+      // Get presigned upload URL from backend
+      const uploadUrlResponse = await fetch(
+        `${config.API_BASE_URL}/gardens/upload-url?filename=${encodeURIComponent(file.name)}&contentType=${encodeURIComponent(file.type)}`,
+        {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          }
+        }
+      );
+
+      if (!uploadUrlResponse.ok) {
+        const errorData = await uploadUrlResponse.json();
+        throw new Error(errorData.message || 'Failed to get upload URL');
+      }
+
+      const { uploadData, publicUrl, gardenId: returnedGardenId } = await uploadUrlResponse.json();
+      
+      // Use the gardenId from the response
+      const finalGardenId = returnedGardenId || gardenId;
+
+      // Create FormData for S3 upload
+      const formData = new FormData();
+      
+      // Add all the fields from presigned POST
+      Object.keys(uploadData.fields).forEach(key => {
+        formData.append(key, uploadData.fields[key]);
+      });
+      
+      // Add the file last
+      formData.append('file', file);
+
+      // Upload to S3
+      const uploadResponse = await fetch(uploadData.url, {
+        method: 'POST',
+        body: formData
+      });
+
+      if (!uploadResponse.ok) {
+        throw new Error('Failed to upload image to S3');
+      }
+
+      return { publicUrl, gardenId: finalGardenId };
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      throw error;
+    }
+  };
+
   const handleSubmit = async () => {
     if (!formData.name.trim() || !formData.coordinates) {
       setError('Please fill in all required fields');
@@ -156,19 +207,38 @@ const CreateGardenWizard = ({ onClose, onGardenCreated, userEmail }) => {
     setError('');
 
     try {
+      let imageUrl = '';
+      let gardenId = null;
+
+      // Upload image if one was selected
+      if (formData.image) {
+        try {
+          const uploadResult = await uploadImageToS3(formData.image, gardenId);
+          imageUrl = uploadResult.publicUrl;
+          gardenId = uploadResult.gardenId;
+        } catch (uploadError) {
+          setError(`Image upload failed: ${uploadError.message}`);
+          setLoading(false);
+          return;
+        }
+      }
+
+      // Create garden data
       const gardenData = {
         name: formData.name,
         description: formData.description,
         location: formData.location,
         coordinates: formData.coordinates,
         userEmail: userEmail,
-        imageUrl: formData.imagePreview || ''
+        imageUrl: imageUrl,
+        gardenId: gardenId  // Include gardenId if we have one from upload
       };
 
+      // Submit garden to backend
       const response = await fetch(`${config.API_BASE_URL}/gardens`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token') || 'mock-token'}`,
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify(gardenData)

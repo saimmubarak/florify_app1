@@ -1,2 +1,4 @@
 boto3
 botocore
+requests
+python-jose[cryptography]
