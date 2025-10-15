@@ -3,12 +3,6 @@ import os
 import requests
 from datetime import datetime
 from jose import jwt, jwk
-from jose.exceptions import JWTError, JWKError
-
-# Get configuration from environment variables
-cognito_user_pool_id = os.environ.get('COGNITO_USER_POOL_ID')
-cognito_region = os.environ.get('COGNITO_REGION', 'eu-north-1')
-user_id_claim = os.environ.get('USER_ID_CLAIM', 'sub')
 
 # Cache for JWKS to avoid repeated API calls
 _jwks_cache = None
@@ -42,6 +36,14 @@ def fetch_jwks():
     if _jwks_cache and _jwks_cache_time:
         if datetime.utcnow().timestamp() - _jwks_cache_time < JWKS_CACHE_DURATION:
             return _jwks_cache
+    
+    # Get Cognito configuration from environment
+    cognito_user_pool_id = os.environ.get('COGNITO_USER_POOL_ID')
+    cognito_region = os.environ.get('COGNITO_REGION', 'eu-north-1')
+    
+    if not cognito_user_pool_id:
+        print("COGNITO_USER_POOL_ID not set")
+        return None
     
     # Fetch fresh JWKS from Cognito
     jwks_url = f"https://cognito-idp.{cognito_region}.amazonaws.com/{cognito_user_pool_id}/.well-known/jwks.json"
@@ -108,7 +110,10 @@ def get_user_from_token(authorization_header):
         )
         
         # Verify issuer matches Cognito
+        cognito_user_pool_id = os.environ.get('COGNITO_USER_POOL_ID')
+        cognito_region = os.environ.get('COGNITO_REGION', 'eu-north-1')
         expected_issuer = f"https://cognito-idp.{cognito_region}.amazonaws.com/{cognito_user_pool_id}"
+        
         if claims.get('iss') != expected_issuer:
             print(f"Invalid issuer: {claims.get('iss')}")
             return None, None
@@ -120,7 +125,7 @@ def get_user_from_token(authorization_header):
             return None, None
         
         # Extract user information
-        user_id = claims.get(user_id_claim)
+        user_id = claims.get('sub')
         email = claims.get('email')
         
         if not user_id:
@@ -129,15 +134,12 @@ def get_user_from_token(authorization_header):
         
         return user_id, email
         
-    except (JWTError, JWKError) as e:
-        print(f"JWT verification error: {str(e)}")
-        return None, None
     except Exception as e:
-        print(f"Unexpected error during token verification: {str(e)}")
+        print(f"Error during token verification: {str(e)}")
         return None, None
 
 def handler(event, context):
-    """Main Lambda handler for gardens API - SIMPLIFIED VERSION"""
+    """Main Lambda handler for gardens API - Step 1: Basic JWT verification only"""
     
     # Handle CORS preflight
     method = event.get("requestContext", {}).get("http", {}).get("method", "")
@@ -156,26 +158,32 @@ def handler(event, context):
     path = event.get("requestContext", {}).get("http", {}).get("path", "")
     
     if method == "GET" and path == "/gardens":
-        # Return mock data for now - we'll add DynamoDB in Step 2
+        # Return mock data for now - Step 1 only
         mock_gardens = [
             {
                 "gardenId": "mock-1",
                 "userId": user_id,
-                "name": "Test Garden",
-                "location": "Test Location",
-                "description": "This is a test garden",
+                "userEmail": user_email or "unknown@example.com",
+                "name": "My Test Garden",
+                "location": "123 Test St",
+                "description": "A test garden for Step 1",
                 "imageUrl": "",
                 "status": "active",
                 "plantCount": 0,
-                "userEmail": user_email or "",
                 "createdAt": datetime.utcnow().isoformat(),
                 "updatedAt": datetime.utcnow().isoformat()
             }
         ]
-        return respond(200, {"gardens": mock_gardens})
+        
+        return respond(200, {
+            "message": "Step 1: JWT verification working!",
+            "user_id": user_id,
+            "user_email": user_email,
+            "gardens": mock_gardens
+        })
     
     elif method == "POST" and path == "/gardens":
-        # Return mock success for now - we'll add DynamoDB in Step 2
+        # Mock garden creation for Step 1
         try:
             body = event.get("body", "")
             if event.get("isBase64Encoded", False):
@@ -184,31 +192,30 @@ def handler(event, context):
             
             data = json.loads(body)
             
-            # Validate required fields
-            if not data.get("name") or not data.get("location"):
-                return respond(400, {"message": "Name and location are required"})
-            
-            # Return mock created garden
+            # Create mock garden response
             mock_garden = {
                 "gardenId": "mock-new-garden",
                 "userId": user_id,
-                "name": data.get("name"),
-                "location": data.get("location"),
+                "userEmail": user_email or "unknown@example.com",
+                "name": data.get("name", "New Garden"),
+                "location": data.get("location", "Unknown Location"),
                 "description": data.get("description", ""),
-                "imageUrl": data.get("imageUrl", ""),
+                "imageUrl": "",
                 "status": "active",
                 "plantCount": 0,
-                "userEmail": user_email or "",
                 "createdAt": datetime.utcnow().isoformat(),
                 "updatedAt": datetime.utcnow().isoformat()
             }
             
-            return respond(201, mock_garden)
+            return respond(201, {
+                "message": "Step 1: Garden creation working!",
+                "garden": mock_garden
+            })
             
         except json.JSONDecodeError:
             return respond(400, {"message": "Invalid JSON body"})
         except Exception as e:
-            print(f"Error creating garden: {str(e)}")
+            print(f"Error in mock garden creation: {str(e)}")
             return respond(500, {"message": "Failed to create garden"})
     
     else:
