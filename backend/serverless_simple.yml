@@ -1,0 +1,85 @@
+service: florify-auth
+
+provider:
+  name: aws
+  runtime: python3.9
+  region: eu-north-1
+  stage: ${opt:stage, 'dev'}
+  environment:
+    CLIENT_ID: 76i7it21omdm3n80nf9j9dc2oc
+    COGNITO_USER_POOL_ID: eu-north-1_i7vhr8PxH
+    COGNITO_REGION: eu-north-1
+    USER_ID_CLAIM: sub
+  iam:
+    role:
+      statements:
+        - Effect: "Allow"
+          Action:
+            - cognito-idp:SignUp
+            - cognito-idp:ConfirmSignUp
+            - cognito-idp:ResendConfirmationCode
+            - cognito-idp:InitiateAuth
+          Resource: "*"
+
+  httpApi:
+    cors:
+      allowedOrigins:
+        - "http://localhost:5173"
+        - "*"  # you can remove this after testing
+      allowedHeaders:
+        - Content-Type
+        - Authorization
+      allowedMethods:
+        - GET
+        - POST
+        - PUT
+        - DELETE
+        - OPTIONS
+      allowCredentials: false
+
+functions:
+  signup:
+    handler: signup_handler.handler
+    events:
+      - httpApi:
+          path: /signup
+          method: post
+
+  confirm:
+    handler: confirm_handler.handler
+    events:
+      - httpApi:
+          path: /confirm
+          method: post
+
+  resend:
+    handler: resend_handler.handler
+    events:
+      - httpApi:
+          path: /resend
+          method: post
+
+  login:
+    handler: login_handler.handler
+    events:
+      - httpApi:
+          path: /login
+          method: post
+
+  gardens:
+    handler: gardens_handler_simple.handler
+    events:
+      - httpApi:
+          path: /gardens
+          method: get
+      - httpApi:
+          path: /gardens
+          method: post
+
+plugins:
+  - serverless-python-requirements
+
+package:
+  exclude:
+    - node_modules/**
+    - .venv/**
