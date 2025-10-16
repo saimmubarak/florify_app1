@@ -1,8 +1,8 @@
 // src/api/gardens.js
 import axios from "axios";
 
-// Replace with your API Gateway Invoke URL
-const API_BASE_URL = "https://o8tdae1gpj.execute-api.eu-north-1.amazonaws.com";
+// Replace with your API Gateway Invoke URL after deployment
+const API_BASE_URL = "https://YOUR_API_ID.execute-api.eu-north-1.amazonaws.com/dev";
 
 // Create axios instance with better error handling
 const api = axios.create({

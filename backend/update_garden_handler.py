@@ -2,10 +2,9 @@ import json
 import boto3
 import os
 from botocore.exceptions import ClientError
-from jwt_utils import get_user_id_from_token
 
 dynamodb = boto3.resource('dynamodb')
-table = dynamodb.Table(os.environ['GARDENS_TABLE_NAME'])
+table = dynamodb.Table(os.environ['GARDENS_TABLE'])
 
 def cors_headers():
     return {
@@ -27,12 +26,8 @@ def handler(event, context):
         return respond(200, {"message": "CORS preflight"})
 
     try:
-        # Get user ID from Cognito JWT token
-        auth_header = event.get('headers', {}).get('Authorization', '')
-        user_id = get_user_id_from_token(auth_header, os.environ['COGNITO_USER_POOL_ID'], os.environ['COGNITO_REGION'])
-        
-        if not user_id:
-            return respond(401, {"message": "Invalid or missing authentication token"})
+        # For now, use a simple user ID - we'll add proper auth later
+        user_id = "user-123"  # This will be replaced with real user ID from JWT
         
         # Get garden ID from path parameters
         garden_id = event.get('pathParameters', {}).get('gardenId')
