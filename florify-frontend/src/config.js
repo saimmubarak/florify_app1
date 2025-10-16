@@ -1,5 +1,4 @@
-const API_BASE_URL = "https://o8tdae1gpj.execute-api.eu-north-1.amazonaws.com";
-// add /dev (or /prod if you changed the stage)
+const API_BASE_URL = "https://jiazehdrvf.execute-api.eu-north-1.amazonaws.com/dev";
 
 export default {
   API_BASE_URL,

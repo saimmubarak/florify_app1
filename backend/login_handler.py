@@ -49,8 +49,8 @@ def handler(event, context):
         tokens = response.get("AuthenticationResult", {})
         return respond(200, {
             "message": "Login successful",
+            "token": tokens.get("IdToken"),  # Use ID token for authentication
             "accessToken": tokens.get("AccessToken"),
-            "idToken": tokens.get("IdToken"),
             "refreshToken": tokens.get("RefreshToken")
         })
 

@@ -59,10 +59,10 @@ const SignupPage = ({ onLogin }) => {
     setError('');
 
     try {
-      const response = await signup(formData.name, formData.email, formData.password);
+      const response = await signup(formData);
       
       alert('Signup successful! Please verify your email.');
-      navigate('/confirm');
+      navigate('/confirm', { state: { email: formData.email } });
     } catch (err) {
       setError(err.message || 'Network error. Please try again.');
     } finally {

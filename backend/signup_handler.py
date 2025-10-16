@@ -21,7 +21,7 @@ def respond(status, body):
 
 def handler(event, context):
     # Handle CORS preflight
-    if event.get("requestContext", {}).get("http", {}).get("method") == "OPTIONS":
+    if event.get("httpMethod") == "OPTIONS":
         return respond(200, {"message": "CORS preflight"})
 
     try:
