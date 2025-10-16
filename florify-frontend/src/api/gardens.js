@@ -1,4 +1,4 @@
-// src/api/auth.js
+// src/api/gardens.js
 import axios from "axios";
 
 // Replace with your API Gateway Invoke URL after deployment
@@ -12,6 +12,20 @@ const api = axios.create({
     'Content-Type': 'application/json',
   }
 });
+
+// Add request interceptor to include auth token
+api.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
 
 // Add response interceptor for better error handling
 api.interceptors.response.use(
@@ -37,43 +51,52 @@ api.interceptors.response.use(
   }
 );
 
-// ----------------- SIGNUP -----------------
-export const signup = async (userData) => {
+// ----------------- GARDEN CRUD OPERATIONS -----------------
+
+// Create a new garden
+export const createGarden = async (gardenData) => {
   try {
-    const response = await api.post('/signup', userData);
+    const response = await api.post('/gardens', gardenData);
     return response.data;
   } catch (error) {
     throw error;
   }
 };
 
-// ----------------- LOGIN -----------------
-export const login = async (userData) => {
+// Get all gardens for the current user
+export const getGardens = async () => {
   try {
-    const response = await api.post('/login', userData);
+    const response = await api.get('/gardens');
     return response.data;
   } catch (error) {
     throw error;
   }
 };
 
-// ----------------- CONFIRM -----------------
-export const confirm = async (email, code) => {
+// Get a specific garden by ID
+export const getGarden = async (gardenId) => {
   try {
-    const response = await api.post('/confirm', {
-      email,
-      code,
-    });
+    const response = await api.get(`/gardens/${gardenId}`);
     return response.data;
   } catch (error) {
     throw error;
   }
 };
 
-// ----------------- RESEND -----------------
-export const resend = async (email) => {
+// Update a garden
+export const updateGarden = async (gardenId, gardenData) => {
   try {
-    const response = await api.post('/resend', { email });
+    const response = await api.put(`/gardens/${gardenId}`, gardenData);
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+// Delete a garden
+export const deleteGarden = async (gardenId) => {
+  try {
+    const response = await api.delete(`/gardens/${gardenId}`);
     return response.data;
   } catch (error) {
     throw error;

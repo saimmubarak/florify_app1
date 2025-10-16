@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
 import AuthLayout from '../components/AuthLayout';
 import AnimatedText from '../components/AnimatedText';
 import InputField from '../components/InputField';
 import Button from '../components/Button';
-import config from '../config';
+import { signup } from '../api/auth';
 
-const SignupPage = ({ onNavigate }) => {
+const SignupPage = ({ onLogin }) => {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -57,22 +59,12 @@ const SignupPage = ({ onNavigate }) => {
     setError('');
 
     try {
-      const response = await fetch(config.SIGNUP_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        alert('Signup successful! Please verify your email.');
-        onNavigate('confirm', formData.email);
-      } else {
-        setError(data.message || 'Signup failed');
-      }
+      const response = await signup(formData.name, formData.email, formData.password);
+      
+      alert('Signup successful! Please verify your email.');
+      navigate('/confirm');
     } catch (err) {
-      setError('Network error. Please try again.');
+      setError(err.message || 'Network error. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -139,9 +131,9 @@ const SignupPage = ({ onNavigate }) => {
         <AnimatedText delay={700}>
           <p className="auth-link">
             Already have an account?{' '}
-            <a onClick={() => onNavigate('login')} style={{ cursor: 'pointer' }}>
+            <Link to="/login" style={{ cursor: 'pointer' }}>
               Log in
-            </a>
+            </Link>
           </p>
         </AnimatedText>
       </div>

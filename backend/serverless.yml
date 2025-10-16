@@ -1,112 +1,121 @@
-service: florify-auth
+service: florify-simple
 
 provider:
   name: aws
   runtime: python3.9
   region: eu-north-1
-  stage: ${opt:stage, 'dev'}
+  stage: dev
   environment:
     CLIENT_ID: 76i7it21omdm3n80nf9j9dc2oc
     COGNITO_USER_POOL_ID: eu-north-1_i7vhr8PxH
     COGNITO_REGION: eu-north-1
-    GARDENS_TABLE_NAME: ${self:service}-gardens-${self:provider.stage}
-    S3_BUCKET_NAME: florify-garden-images-${self:provider.stage}
-    USER_ID_CLAIM: sub
+    GARDENS_TABLE: florify-gardens-dev
   iam:
     role:
       statements:
-        - Effect: "Allow"
+        - Effect: Allow
           Action:
-            - cognito-idp:SignUp
-            - cognito-idp:ConfirmSignUp
-            - cognito-idp:ResendConfirmationCode
-            - cognito-idp:InitiateAuth
+            - cognito-idp:*
           Resource: "*"
-        - Effect: "Allow"
+        - Effect: Allow
           Action:
-            - dynamodb:Query
-            - dynamodb:Scan
-            - dynamodb:GetItem
-            - dynamodb:PutItem
-            - dynamodb:UpdateItem
-            - dynamodb:DeleteItem
-          Resource: 
-            - "arn:aws:dynamodb:${self:provider.region}:*:table/${self:service}-gardens-${self:provider.stage}"
-            - "arn:aws:dynamodb:${self:provider.region}:*:table/${self:service}-gardens-${self:provider.stage}/index/*"
-        - Effect: "Allow"
+            - dynamodb:*
+          Resource: "*"
+        - Effect: Allow
           Action:
-            - s3:GetObject
-            - s3:PutObject
-            - s3:PutObjectAcl
-            - s3:ListBucket
-          Resource: 
-            - "arn:aws:s3:::florify-garden-images-${self:provider.stage}/*"
-            - "arn:aws:s3:::florify-garden-images-${self:provider.stage}"
-
-  httpApi:
-    cors:
-      allowedOrigins:
-        - "http://localhost:5173"
-        - "*"  # you can remove this after testing
-      allowedHeaders:
-        - Content-Type
-        - Authorization
-      allowedMethods:
-        - GET
-        - POST
-        - PUT
-        - DELETE
-        - OPTIONS
-      allowCredentials: false
+            - logs:*
+          Resource: "*"
 
 functions:
+  # Authentication
   signup:
     handler: signup_handler.handler
     events:
-      - httpApi:
-          path: /signup
+      - http:
+          path: signup
           method: post
-
-  confirm:
-    handler: confirm_handler.handler
-    events:
-      - httpApi:
-          path: /confirm
-          method: post
-
-  resend:
-    handler: resend_handler.handler
-    events:
-      - httpApi:
-          path: /resend
-          method: post
+          cors: true
 
   login:
     handler: login_handler.handler
     events:
-      - httpApi:
-          path: /login
+      - http:
+          path: login
           method: post
+          cors: true
 
-  gardens:
-    handler: gardens_handler.handler
+  confirm:
+    handler: confirm_handler.handler
     events:
-      - httpApi:
-          path: /gardens
-          method: get
-      - httpApi:
-          path: /gardens
+      - http:
+          path: confirm
           method: post
-      - httpApi:
-          path: /gardens/upload-url
+          cors: true
+
+  resend:
+    handler: resend_handler.handler
+    events:
+      - http:
+          path: resend
+          method: post
+          cors: true
+
+  # Gardens
+  create-garden:
+    handler: create_garden_handler.handler
+    events:
+      - http:
+          path: gardens
+          method: post
+          cors: true
+
+  get-gardens:
+    handler: get_gardens_handler.handler
+    events:
+      - http:
+          path: gardens
           method: get
+          cors: true
+
+  get-garden:
+    handler: get_garden_handler.handler
+    events:
+      - http:
+          path: gardens/{gardenId}
+          method: get
+          cors: true
+
+  update-garden:
+    handler: update_garden_handler.handler
+    events:
+      - http:
+          path: gardens/{gardenId}
+          method: put
+          cors: true
+
+  delete-garden:
+    handler: delete_garden_handler.handler
+    events:
+      - http:
+          path: gardens/{gardenId}
+          method: delete
+          cors: true
+
+  # Test
+  hello:
+    handler: handler.hello
+    events:
+      - http:
+          path: hello
+          method: get
+          cors: true
 
 resources:
   Resources:
     GardensTable:
       Type: AWS::DynamoDB::Table
       Properties:
-        TableName: ${self:service}-gardens-${self:provider.stage}
+        TableName: florify-gardens-dev
         AttributeDefinitions:
           - AttributeName: userId
             AttributeType: S
@@ -118,40 +127,3 @@ resources:
           - AttributeName: gardenId
             KeyType: RANGE
         BillingMode: PAY_PER_REQUEST
-
-    GardenImagesBucket:
-      Type: AWS::S3::Bucket
-      Properties:
-        BucketName: florify-garden-images-${self:provider.stage}
-        CorsConfiguration:
-          CorsRules:
-            - AllowedHeaders: ['*']
-              AllowedMethods: [GET, PUT, POST, DELETE, HEAD]
-              AllowedOrigins: ['*']
-              MaxAge: 3000
-        PublicAccessBlockConfiguration:
-          BlockPublicAcls: false
-          BlockPublicPolicy: false
-          IgnorePublicAcls: false
-          RestrictPublicBuckets: false
-
-    GardenImagesBucketPolicy:
-      Type: AWS::S3::BucketPolicy
-      Properties:
-        Bucket: 
-          Ref: GardenImagesBucket
-        PolicyDocument:
-          Statement:
-            - Effect: Allow
-              Principal: "*"
-              Action: "s3:GetObject"
-              Resource: 
-                Fn::Sub: "${GardenImagesBucket}/*"
-
-plugins:
-  - serverless-python-requirements
-
-package:
-  exclude:
-    - node_modules/**
-    - .venv/**

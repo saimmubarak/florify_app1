@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Button from '../components/Button';
 import TypewriterText from '../components/TypewriterText';
-import CreateGardenWizard from '../components/CreateGardenWizard';
+import SimpleCreateGardenWizard from '../components/SimpleCreateGardenWizard';
 import GardenCard from '../components/GardenCard';
-import config from '../config';
+import { getGardens } from '../api/gardens';
 import '../styles/landing.css';
 
 function LandingPage({ onLogout, userEmail }) {
+  const navigate = useNavigate();
   const [showWizard, setShowWizard] = useState(false);
   const [gardens, setGardens] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -49,22 +51,10 @@ function LandingPage({ onLogout, userEmail }) {
   const fetchGardens = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`${config.API_BASE_URL}/gardens`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token') || 'mock-token'}`
-        }
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setGardens(data.gardens || []);
-      } else {
-        setError('Failed to load gardens');
-      }
+      const response = await getGardens();
+      setGardens(response.gardens || []);
     } catch (err) {
-      setError('Network error loading gardens');
+      setError(err.message);
     } finally {
       setLoading(false);
     }
@@ -76,7 +66,7 @@ function LandingPage({ onLogout, userEmail }) {
   };
 
   const handleGardenClick = (gardenId) => {
-    console.log('Navigate to garden:', gardenId);
+    navigate(`/garden/${gardenId}`);
   };
 
   const navbarLinks = [
@@ -238,7 +228,7 @@ function LandingPage({ onLogout, userEmail }) {
       {showWizard && (
         <div className="modal-overlay">
           <div className="modal-content">
-            <CreateGardenWizard 
+            <SimpleCreateGardenWizard 
               onClose={() => setShowWizard(false)}
               onGardenCreated={handleGardenCreated}
               userEmail={userEmail}
