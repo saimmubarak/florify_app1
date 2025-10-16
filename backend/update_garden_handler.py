@@ -1,8 +1,9 @@
 import json
 import boto3
 import os
+from datetime import datetime
 from botocore.exceptions import ClientError
-from jwt_utils import require_auth, respond
+from simple_auth import require_auth, respond
 
 dynamodb = boto3.resource('dynamodb')
 table = dynamodb.Table(os.environ['GARDENS_TABLE'])
@@ -25,9 +26,10 @@ def handler(event, context):
         garden_description = body.get("description")
 
         # Build update expression dynamically
+        current_time = datetime.utcnow().isoformat()
         update_expression = "SET updatedAt = :updatedAt"
         expression_attribute_values = {
-            ":updatedAt": context.aws_request_id
+            ":updatedAt": current_time
         }
 
         if garden_name is not None:

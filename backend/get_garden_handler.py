@@ -2,7 +2,7 @@ import json
 import boto3
 import os
 from botocore.exceptions import ClientError
-from jwt_utils import require_auth, respond
+from simple_auth import require_auth, respond
 
 dynamodb = boto3.resource('dynamodb')
 table = dynamodb.Table(os.environ['GARDENS_TABLE'])

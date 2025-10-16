@@ -1,8 +1,18 @@
 import json
 import boto3
-import jwt
 import requests
 from botocore.exceptions import ClientError
+
+# Try to import jwt, fallback to python-jose if PyJWT is not available
+try:
+    import jwt
+    JWT_AVAILABLE = True
+except ImportError:
+    try:
+        from jose import jwt
+        JWT_AVAILABLE = True
+    except ImportError:
+        JWT_AVAILABLE = False
 
 def cors_headers():
     return {
@@ -35,6 +45,9 @@ def get_cognito_public_keys():
 
 def verify_jwt_token(token):
     """Verify JWT token and return user information"""
+    if not JWT_AVAILABLE:
+        return None, "JWT library not available"
+    
     try:
         # Remove 'Bearer ' prefix if present
         if token.startswith('Bearer '):

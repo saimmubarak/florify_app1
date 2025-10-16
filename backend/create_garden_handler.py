@@ -2,8 +2,9 @@ import json
 import boto3
 import os
 import uuid
+from datetime import datetime
 from botocore.exceptions import ClientError
-from jwt_utils import require_auth, respond
+from simple_auth import require_auth, respond
 
 dynamodb = boto3.resource('dynamodb')
 table = dynamodb.Table(os.environ['GARDENS_TABLE'])
@@ -26,14 +27,15 @@ def handler(event, context):
         garden_id = str(uuid.uuid4())
 
         # Create garden item
+        current_time = datetime.utcnow().isoformat()
         garden_item = {
             "userId": user_id,
             "gardenId": garden_id,
             "name": garden_name,
             "location": garden_location,
             "description": garden_description,
-            "createdAt": context.aws_request_id,
-            "updatedAt": context.aws_request_id
+            "createdAt": current_time,
+            "updatedAt": current_time
         }
 
         # Save to DynamoDB
