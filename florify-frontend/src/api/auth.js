@@ -2,7 +2,7 @@
 import axios from "axios";
 
 // Replace with your API Gateway Invoke URL after deployment
-const API_BASE_URL = "https://YOUR_API_ID.execute-api.eu-north-1.amazonaws.com/dev";
+const API_BASE_URL = "https://jiazehdrvf.execute-api.eu-north-1.amazonaws.com/dev";
 
 // Create axios instance with better error handling
 const api = axios.create({
