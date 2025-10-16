@@ -9,8 +9,6 @@ provider:
     CLIENT_ID: 76i7it21omdm3n80nf9j9dc2oc
     COGNITO_USER_POOL_ID: eu-north-1_i7vhr8PxH
     COGNITO_REGION: eu-north-1
-    GARDENS_TABLE_NAME: ${self:service}-gardens-${self:provider.stage}
-    S3_BUCKET_NAME: florify-garden-images-${self:provider.stage}
     USER_ID_CLAIM: sub
   iam:
     role:
@@ -34,37 +32,6 @@ provider:
             - cognito-idp:AdminAddUserToGroup
             - cognito-idp:AdminRemoveUserFromGroup
           Resource: "*"
-        # DynamoDB permissions
-        - Effect: "Allow"
-          Action:
-            - dynamodb:Query
-            - dynamodb:Scan
-            - dynamodb:GetItem
-            - dynamodb:PutItem
-            - dynamodb:UpdateItem
-            - dynamodb:DeleteItem
-            - dynamodb:DescribeTable
-            - dynamodb:ListTables
-          Resource: 
-            - "arn:aws:dynamodb:${self:provider.region}:*:table/${self:service}-gardens-${self:provider.stage}"
-            - "arn:aws:dynamodb:${self:provider.region}:*:table/${self:service}-gardens-${self:provider.stage}/index/*"
-        # S3 permissions
-        - Effect: "Allow"
-          Action:
-            - s3:GetObject
-            - s3:PutObject
-            - s3:PutObjectAcl
-            - s3:DeleteObject
-            - s3:ListBucket
-            - s3:GetBucketLocation
-            - s3:GetBucketCors
-            - s3:PutBucketCors
-            - s3:GetBucketPolicy
-            - s3:PutBucketPolicy
-            - s3:DeleteBucketPolicy
-          Resource: 
-            - "arn:aws:s3:::florify-garden-images-${self:provider.stage}/*"
-            - "arn:aws:s3:::florify-garden-images-${self:provider.stage}"
         # CloudWatch Logs permissions
         - Effect: "Allow"
           Action:
@@ -122,17 +89,6 @@ provider:
             - iam:GetRolePolicy
             - iam:ListRolePolicies
           Resource: "*"
-        # SNS permissions (for notifications if needed)
-        - Effect: "Allow"
-          Action:
-            - sns:Publish
-            - sns:CreateTopic
-            - sns:DeleteTopic
-            - sns:GetTopicAttributes
-            - sns:SetTopicAttributes
-            - sns:Subscribe
-            - sns:Unsubscribe
-          Resource: "*"
 
   httpApi:
     cors:
@@ -179,65 +135,12 @@ functions:
           path: /login
           method: post
 
-  gardens:
-    handler: gardens_handler.handler
+  hello:
+    handler: handler.hello
     events:
       - httpApi:
-          path: /gardens
+          path: /hello
           method: get
-      - httpApi:
-          path: /gardens
-          method: post
-      - httpApi:
-          path: /gardens/upload-url
-          method: get
-
-resources:
-  Resources:
-    GardensTable:
-      Type: AWS::DynamoDB::Table
-      Properties:
-        TableName: ${self:service}-gardens-${self:provider.stage}
-        AttributeDefinitions:
-          - AttributeName: userId
-            AttributeType: S
-          - AttributeName: gardenId
-            AttributeType: S
-        KeySchema:
-          - AttributeName: userId
-            KeyType: HASH
-          - AttributeName: gardenId
-            KeyType: RANGE
-        BillingMode: PAY_PER_REQUEST
-
-    GardenImagesBucket:
-      Type: AWS::S3::Bucket
-      Properties:
-        BucketName: florify-garden-images-${self:provider.stage}
-        CorsConfiguration:
-          CorsRules:
-            - AllowedHeaders: ['*']
-              AllowedMethods: [GET, PUT, POST, DELETE, HEAD]
-              AllowedOrigins: ['*']
-              MaxAge: 3000
-        PublicAccessBlockConfiguration:
-          BlockPublicAcls: false
-          BlockPublicPolicy: false
-          IgnorePublicAcls: false
-          RestrictPublicBuckets: false
-
-    GardenImagesBucketPolicy:
-      Type: AWS::S3::BucketPolicy
-      Properties:
-        Bucket: 
-          Ref: GardenImagesBucket
-        PolicyDocument:
-          Statement:
-            - Effect: Allow
-              Principal: "*"
-              Action: "s3:GetObject"
-              Resource: 
-                Fn::Sub: "${GardenImagesBucket}/*"
 
 plugins:
   - serverless-python-requirements
