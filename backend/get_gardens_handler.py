@@ -2,32 +2,16 @@ import json
 import boto3
 import os
 from botocore.exceptions import ClientError
+from jwt_utils import require_auth, respond
 
 dynamodb = boto3.resource('dynamodb')
 table = dynamodb.Table(os.environ['GARDENS_TABLE'])
 
-def cors_headers():
-    return {
-        "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Methods": "OPTIONS,POST,GET,PUT,DELETE",
-        "Access-Control-Allow-Headers": "Content-Type,Authorization"
-    }
-
-def respond(status, body):
-    return {
-        "statusCode": status,
-        "headers": cors_headers(),
-        "body": json.dumps(body)
-    }
-
+@require_auth
 def handler(event, context):
-    # Handle CORS preflight
-    if event.get("requestContext", {}).get("http", {}).get("method") == "OPTIONS":
-        return respond(200, {"message": "CORS preflight"})
-
     try:
-        # For now, use a simple user ID - we'll add proper auth later
-        user_id = "user-123"  # This will be replaced with real user ID from JWT
+        # Get authenticated user ID from the decorator
+        user_id = event['user_id']
 
         # Query gardens for this user
         response = table.query(
