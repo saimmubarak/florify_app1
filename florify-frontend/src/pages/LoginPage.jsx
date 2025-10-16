@@ -39,7 +39,7 @@ const LoginPage = ({ onLogin }) => {
     setError('');
 
     try {
-      const response = await login(formData.email, formData.password);
+      const response = await login(formData);
       
       // Store token and user info
       localStorage.setItem('token', response.token);
@@ -51,7 +51,7 @@ const LoginPage = ({ onLogin }) => {
 
     } catch (err) {
       console.error('Network error:', err);
-      setError('Unable to connect to the server. Please check your connection.');
+      setError(err.message || 'Unable to connect to the server. Please check your connection.');
     } finally {
       setLoading(false);
     }

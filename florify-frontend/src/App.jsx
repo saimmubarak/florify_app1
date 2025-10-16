@@ -45,7 +45,7 @@ function App() {
           element={
             isAuthenticated ? 
             <Navigate to="/" replace /> : 
-            <EmailConfirmationPage onLogin={handleLogin} />
+            <EmailConfirmationPage />
           } 
         />
         <Route 

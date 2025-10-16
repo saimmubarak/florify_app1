@@ -5,26 +5,61 @@ import os
 client = boto3.client("cognito-idp")
 
 def handler(event, context):
-    if event.get("requestContext", {}).get("http", {}).get("method") == "OPTIONS":
+    # Handle CORS preflight
+    if event.get("httpMethod") == "OPTIONS":
         return {
             "statusCode": 200,
             "headers": cors_headers(),
             "body": ""
         }
 
-    body = json.loads(event["body"])
-    email = body["email"]
+    try:
+        body = json.loads(event.get("body", "{}"))
+    except Exception:
+        return {
+            "statusCode": 400,
+            "headers": cors_headers(),
+            "body": json.dumps({"message": "Invalid JSON body"})
+        }
 
-    client.resend_confirmation_code(
-        ClientId=os.environ["CLIENT_ID"],
-        Username=email
-    )
+    email = body.get("email")
 
-    return {
-        "statusCode": 200,
-        "headers": cors_headers(),
-        "body": json.dumps({"message": "Confirmation code resent successfully."})
-    }
+    if not email:
+        return {
+            "statusCode": 400,
+            "headers": cors_headers(),
+            "body": json.dumps({"message": "Email is required"})
+        }
+
+    try:
+        client.resend_confirmation_code(
+            ClientId=os.environ["CLIENT_ID"],
+            Username=email
+        )
+
+        return {
+            "statusCode": 200,
+            "headers": cors_headers(),
+            "body": json.dumps({"message": "Confirmation code resent successfully."})
+        }
+    except client.exceptions.InvalidParameterException:
+        return {
+            "statusCode": 400,
+            "headers": cors_headers(),
+            "body": json.dumps({"message": "Invalid email address"})
+        }
+    except client.exceptions.UserNotFoundException:
+        return {
+            "statusCode": 400,
+            "headers": cors_headers(),
+            "body": json.dumps({"message": "User not found"})
+        }
+    except Exception as e:
+        return {
+            "statusCode": 500,
+            "headers": cors_headers(),
+            "body": json.dumps({"message": "Internal server error"})
+        }
 
 def cors_headers():
     return {

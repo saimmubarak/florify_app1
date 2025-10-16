@@ -1,11 +1,15 @@
 import React, { useState } from 'react';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import AuthLayout from '../components/AuthLayout';
 import AnimatedText from '../components/AnimatedText';
 import InputField from '../components/InputField';
 import Button from '../components/Button';
-import config from '../config';
+import { confirm, resend } from '../api/auth';
 
-const EmailConfirmationPage = ({ onNavigate, email = '' }) => {
+const EmailConfirmationPage = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const email = location.state?.email || '';
   const [code, setCode] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -27,22 +31,11 @@ const EmailConfirmationPage = ({ onNavigate, email = '' }) => {
     setError('');
 
     try {
-      const response = await fetch(config.CONFIRM_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, code })
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        alert('Email confirmed successfully!');
-        onNavigate('landing', email);
-      } else {
-        setError(data.message || 'Confirmation failed');
-      }
+      await confirm(email, code);
+      alert('Email confirmed successfully!');
+      navigate('/login');
     } catch (err) {
-      setError('Network error. Please try again.');
+      setError(err.message || 'Confirmation failed');
     } finally {
       setLoading(false);
     }
@@ -53,21 +46,10 @@ const EmailConfirmationPage = ({ onNavigate, email = '' }) => {
     setError('');
 
     try {
-      const response = await fetch(config.RESEND_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email })
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        alert('Confirmation code resent!');
-      } else {
-        setError(data.message || 'Resend failed');
-      }
+      await resend(email);
+      alert('Confirmation code resent!');
     } catch (err) {
-      setError('Network error. Please try again.');
+      setError(err.message || 'Resend failed');
     } finally {
       setResending(false);
     }
@@ -125,9 +107,9 @@ const EmailConfirmationPage = ({ onNavigate, email = '' }) => {
 
         <AnimatedText delay={600}>
           <p className="auth-link">
-            <a onClick={() => onNavigate('login')} style={{ cursor: 'pointer' }}>
+            <Link to="/login" style={{ cursor: 'pointer' }}>
               Back to login
-            </a>
+            </Link>
           </p>
         </AnimatedText>
       </div>
