@@ -11,7 +11,7 @@ const EmptyGardenWizard = ({ onClose, onGardenCreated, userEmail }) => {
   const [currentStep, setCurrentStep] = useState(1);
   const [blueprintModel] = useState(() => new BlueprintModel());
   const [blueprintData, setBlueprintData] = useState(blueprintModel.toJSON());
-  const [editorMode, setEditorMode] = useState('view');
+  const [editorMode, setEditorMode] = useState('draw');
   const [gardenName, setGardenName] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -19,20 +19,20 @@ const EmptyGardenWizard = ({ onClose, onGardenCreated, userEmail }) => {
   const steps = [
     { 
       number: 1, 
-      title: 'House & Walls', 
-      description: 'Add house front and boundary walls',
-      component: 'house-walls'
-    },
-    { 
-      number: 2, 
-      title: 'Draw Layout', 
-      description: 'Draw pathways, driveways, and garden areas',
+      title: 'Draw Your Garden', 
+      description: 'Use drawing tools to create your garden blueprint',
       component: 'draw'
     },
     { 
+      number: 2, 
+      title: 'Add Details', 
+      description: 'Add house front and boundary walls',
+      component: 'details'
+    },
+    { 
       number: 3, 
-      title: 'Save', 
-      description: 'Name and save your blueprint',
+      title: 'Save Blueprint', 
+      description: 'Name and save your garden blueprint',
       component: 'save'
     }
   ];
@@ -110,6 +110,36 @@ const EmptyGardenWizard = ({ onClose, onGardenCreated, userEmail }) => {
       case 1:
         return (
           <div className="step-content">
+            <div className="drawing-instructions-panel">
+              <h4>🎨 Drawing Tools</h4>
+              <div className="tool-descriptions">
+                <div className="tool-desc">
+                  <strong>📏 Line Tool:</strong> Click and drag to draw straight lines
+                </div>
+                <div className="tool-desc">
+                  <strong>⬜ Rectangle Tool:</strong> Click and drag to draw rectangles
+                </div>
+                <div className="tool-desc">
+                  <strong>🔷 Polygon Tool:</strong> Click to add points, double-click to finish
+                </div>
+              </div>
+              
+              <div className="drawing-tips">
+                <h5>Drawing Tips:</h5>
+                <ul>
+                  <li>Use the grid as a guide for measurements</li>
+                  <li>Switch to Edit mode to move existing shapes</li>
+                  <li>Switch to View mode to just look at your drawing</li>
+                  <li>Mouse coordinates are shown in the toolbar</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 2:
+        return (
+          <div className="step-content">
             <div className="step-section">
               <h4>🏠 House Front</h4>
               <HouseFrontSelector 
@@ -120,19 +150,6 @@ const EmptyGardenWizard = ({ onClose, onGardenCreated, userEmail }) => {
             <div className="step-section">
               <h4>🧱 Boundary Walls</h4>
               <WallConfigurator 
-                blueprintModel={blueprintModel}
-                onBlueprintChange={handleBlueprintChange}
-              />
-            </div>
-          </div>
-        );
-
-      case 2:
-        return (
-          <div className="step-content">
-            <div className="step-section">
-              <h4>🛤️ Draw Layout</h4>
-              <PathwayEditor 
                 blueprintModel={blueprintModel}
                 onBlueprintChange={handleBlueprintChange}
               />
@@ -159,12 +176,11 @@ const EmptyGardenWizard = ({ onClose, onGardenCreated, userEmail }) => {
               </div>
               
               <div className="blueprint-summary">
-                <h4>Elements in your blueprint:</h4>
+                <h4>Your Blueprint Contains:</h4>
                 <ul>
+                  <li>Drawn Elements: {blueprintModel.getShapesByRole('drawn').length} shapes</li>
                   <li>House Front: {blueprintModel.data.templates.selected || 'Not added'}</li>
                   <li>Boundary Walls: {blueprintModel.getShapesByRole('boundary').length > 0 ? 'Added' : 'Not added'}</li>
-                  <li>Pathways: {blueprintModel.getShapesByRole('pathway').length} drawn</li>
-                  <li>Garden Areas: {blueprintModel.getShapesByRole('gardenBed').length} defined</li>
                 </ul>
               </div>
             </div>

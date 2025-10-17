@@ -1,12 +1,13 @@
 import React, { useState, useRef, useEffect } from 'react';
 
-const SVGEditor = ({ blueprintModel, onBlueprintChange, mode = 'view' }) => {
+const SVGEditor = ({ blueprintModel, onBlueprintChange, mode = 'draw' }) => {
   const svgRef = useRef(null);
   const [selectedShape, setSelectedShape] = useState(null);
   const [isDrawing, setIsDrawing] = useState(false);
   const [currentPath, setCurrentPath] = useState([]);
   const [dragState, setDragState] = useState(null);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+  const [drawingTool, setDrawingTool] = useState('line'); // line, rectangle, polygon
 
   // Convert mm to SVG pixels
   const mmToPixels = (mm) => mm * 3.78;
@@ -42,7 +43,18 @@ const SVGEditor = ({ blueprintModel, onBlueprintChange, mode = 'view' }) => {
     
     if (isDrawing && mode === 'draw') {
       const mmPos = { x: pixelsToMm(x), y: pixelsToMm(y) };
-      setCurrentPath(prev => [...prev, mmPos]);
+      
+      if (drawingTool === 'line') {
+        // For line tool, update the end point
+        setCurrentPath([currentPath[0], mmPos]);
+      } else if (drawingTool === 'rectangle') {
+        // For rectangle, calculate opposite corner
+        const start = currentPath[0];
+        setCurrentPath([start, { x: mmPos.x, y: start.y }, mmPos, { x: start.x, y: mmPos.y }, start]);
+      } else if (drawingTool === 'polygon') {
+        // For polygon, add points as you move
+        setCurrentPath(prev => [...prev, mmPos]);
+      }
     }
   };
 
@@ -52,15 +64,15 @@ const SVGEditor = ({ blueprintModel, onBlueprintChange, mode = 'view' }) => {
     
     setIsDrawing(false);
     
-    if (currentPath.length > 1) {
+    if (currentPath.length >= 2) {
       const newShape = {
-        type: 'polyline',
-        role: 'pathway',
+        type: drawingTool === 'line' ? 'polyline' : 'polygon',
+        role: 'drawn',
         points: currentPath,
         style: {
-          stroke: '#7f8c8d',
-          weight_mm: 0.6,
-          fill: 'none'
+          stroke: '#2c3e50',
+          weight_mm: 0.5,
+          fill: drawingTool === 'rectangle' ? '#f8f9fa' : 'none'
         }
       };
       
@@ -69,6 +81,28 @@ const SVGEditor = ({ blueprintModel, onBlueprintChange, mode = 'view' }) => {
     }
     
     setCurrentPath([]);
+  };
+
+  // Handle double click to finish polygon
+  const handleDoubleClick = (event) => {
+    if (drawingTool === 'polygon' && currentPath.length >= 3) {
+      setIsDrawing(false);
+      
+      const newShape = {
+        type: 'polygon',
+        role: 'drawn',
+        points: currentPath,
+        style: {
+          stroke: '#2c3e50',
+          weight_mm: 0.5,
+          fill: '#f8f9fa'
+        }
+      };
+      
+      blueprintModel.addShape(newShape);
+      onBlueprintChange(blueprintModel.toJSON());
+      setCurrentPath([]);
+    }
   };
 
   // Handle shape selection
@@ -159,47 +193,9 @@ const SVGEditor = ({ blueprintModel, onBlueprintChange, mode = 'view' }) => {
             points={points}
           />
         );
-      case 'rect': {
-        const rect = shape.points[0];
-        const width = Math.abs(shape.points[1].x - shape.points[0].x);
-        const height = Math.abs(shape.points[1].y - shape.points[0].y);
-        return (
-          <rect
-            {...commonProps}
-            x={mmToPixels(rect.x)}
-            y={mmToPixels(rect.y)}
-            width={mmToPixels(width)}
-            height={mmToPixels(height)}
-          />
-        );
-      }
       default:
         return null;
     }
-  };
-
-  // Render openings (doors, gates)
-  const renderOpenings = (shape) => {
-    if (!shape.openings || shape.openings.length === 0) return null;
-    
-    return shape.openings.map((opening, index) => {
-      const start = opening.start;
-      const end = opening.end;
-      
-      return (
-        <line
-          key={`${shape.id}-opening-${index}`}
-          x1={mmToPixels(start[0])}
-          y1={mmToPixels(start[1])}
-          x2={mmToPixels(end[0])}
-          y2={mmToPixels(end[1])}
-          stroke="#e74c3c"
-          strokeWidth={mmToPixels(0.3)}
-          strokeDasharray="2,2"
-          className="opening"
-        />
-      );
-    });
   };
 
   // Render current drawing path
@@ -209,14 +205,27 @@ const SVGEditor = ({ blueprintModel, onBlueprintChange, mode = 'view' }) => {
     const points = currentPath.map(p => `${mmToPixels(p.x)},${mmToPixels(p.y)}`).join(' ');
     
     return (
-      <polyline
-        points={points}
-        stroke="#3498db"
-        strokeWidth={mmToPixels(0.6)}
-        fill="none"
-        strokeDasharray="3,3"
-        className="current-path"
-      />
+      <g>
+        {drawingTool === 'line' ? (
+          <polyline
+            points={points}
+            stroke="#3498db"
+            strokeWidth={mmToPixels(0.5)}
+            fill="none"
+            strokeDasharray="3,3"
+            className="current-path"
+          />
+        ) : (
+          <polygon
+            points={points}
+            stroke="#3498db"
+            strokeWidth={mmToPixels(0.5)}
+            fill="rgba(52, 152, 219, 0.1)"
+            strokeDasharray="3,3"
+            className="current-path"
+          />
+        )}
+      </g>
     );
   };
 
@@ -226,25 +235,58 @@ const SVGEditor = ({ blueprintModel, onBlueprintChange, mode = 'view' }) => {
         <div className="mode-buttons">
           <button 
             className={`mode-btn ${mode === 'view' ? 'active' : ''}`}
-            onClick={() => setSelectedShape(null)}
+            onClick={() => {
+              setMode('view');
+              setSelectedShape(null);
+            }}
           >
             👁️ View
           </button>
           <button 
             className={`mode-btn ${mode === 'edit' ? 'active' : ''}`}
-            onClick={() => setSelectedShape(null)}
+            onClick={() => {
+              setMode('edit');
+              setSelectedShape(null);
+            }}
           >
             ✏️ Edit
           </button>
           <button 
             className={`mode-btn ${mode === 'draw' ? 'active' : ''}`}
-            onClick={() => setSelectedShape(null)}
+            onClick={() => {
+              setMode('draw');
+              setSelectedShape(null);
+            }}
           >
             🖊️ Draw
           </button>
         </div>
+        
+        {mode === 'draw' && (
+          <div className="drawing-tools">
+            <button 
+              className={`tool-btn ${drawingTool === 'line' ? 'active' : ''}`}
+              onClick={() => setDrawingTool('line')}
+            >
+              📏 Line
+            </button>
+            <button 
+              className={`tool-btn ${drawingTool === 'rectangle' ? 'active' : ''}`}
+              onClick={() => setDrawingTool('rectangle')}
+            >
+              ⬜ Rectangle
+            </button>
+            <button 
+              className={`tool-btn ${drawingTool === 'polygon' ? 'active' : ''}`}
+              onClick={() => setDrawingTool('polygon')}
+            >
+              🔷 Polygon
+            </button>
+          </div>
+        )}
+        
         <div className="mouse-coords">
-          Mouse: {Math.round(pixelsToMm(mousePos.x))}mm, {Math.round(pixelsToMm(mousePos.y))}mm
+          {Math.round(pixelsToMm(mousePos.x))}mm, {Math.round(pixelsToMm(mousePos.y))}mm
         </div>
       </div>
       
@@ -256,8 +298,11 @@ const SVGEditor = ({ blueprintModel, onBlueprintChange, mode = 'view' }) => {
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
+        onDoubleClick={handleDoubleClick}
         className="blueprint-svg"
-        style={{ cursor: mode === 'draw' ? 'crosshair' : 'default' }}
+        style={{ 
+          cursor: mode === 'draw' ? 'crosshair' : mode === 'edit' ? 'move' : 'default' 
+        }}
       >
         {/* Grid background */}
         <defs>
@@ -271,13 +316,23 @@ const SVGEditor = ({ blueprintModel, onBlueprintChange, mode = 'view' }) => {
         {blueprintModel.data.shapes.map(shape => (
           <g key={shape.id}>
             {renderShape(shape)}
-            {renderOpenings(shape)}
           </g>
         ))}
         
         {/* Render current drawing path */}
         {renderCurrentPath()}
       </svg>
+      
+      {mode === 'draw' && (
+        <div className="drawing-instructions">
+          <p>
+            <strong>{drawingTool === 'line' ? 'Line Tool:' : drawingTool === 'rectangle' ? 'Rectangle Tool:' : 'Polygon Tool:'}</strong>
+            {drawingTool === 'line' && ' Click and drag to draw a line'}
+            {drawingTool === 'rectangle' && ' Click and drag to draw a rectangle'}
+            {drawingTool === 'polygon' && ' Click to add points, double-click to finish'}
+          </p>
+        </div>
+      )}
     </div>
   );
 };

@@ -166,6 +166,56 @@
   font-weight: 600;
 }
 
+.drawing-instructions-panel {
+  padding: 20px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+.drawing-instructions-panel h4 {
+  margin: 0 0 15px 0;
+  color: #2c3e50;
+  font-size: 18px;
+}
+
+.tool-descriptions {
+  margin-bottom: 20px;
+}
+
+.tool-desc {
+  margin-bottom: 8px;
+  padding: 8px 12px;
+  background: white;
+  border-radius: 4px;
+  border-left: 3px solid #3498db;
+  font-size: 14px;
+}
+
+.drawing-tips {
+  background: #e8f5e8;
+  padding: 15px;
+  border-radius: 6px;
+  border-left: 4px solid #27ae60;
+}
+
+.drawing-tips h5 {
+  margin: 0 0 10px 0;
+  color: #2c3e50;
+  font-size: 14px;
+}
+
+.drawing-tips ul {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.drawing-tips li {
+  margin-bottom: 5px;
+  font-size: 13px;
+  color: #2c3e50;
+}
+
 .wizard-main {
   flex: 1;
   display: flex;
@@ -262,6 +312,50 @@
   font-size: 11px;
   color: #6c757d;
   font-family: 'Courier New', monospace;
+  background: #f8f9fa;
+  padding: 4px 8px;
+  border-radius: 4px;
+  border: 1px solid #dee2e6;
+}
+
+.drawing-tools {
+  display: flex;
+  gap: 5px;
+  margin-left: 20px;
+}
+
+.tool-btn {
+  padding: 6px 12px;
+  border: 1px solid #dee2e6;
+  background: white;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.tool-btn:hover {
+  background: #e9ecef;
+  border-color: #3498db;
+}
+
+.tool-btn.active {
+  background: #3498db;
+  color: white;
+  border-color: #3498db;
+}
+
+.drawing-instructions {
+  position: absolute;
+  bottom: 10px;
+  left: 10px;
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 8px 12px;
+  border-radius: 4px;
+  font-size: 12px;
+  z-index: 10;
 }
 
 .blueprint-svg {
