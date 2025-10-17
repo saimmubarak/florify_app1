@@ -1,5 +1,4 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { BlueprintModel } from './BlueprintModel';
 
 const SVGEditor = ({ blueprintModel, onBlueprintChange, mode = 'view' }) => {
   const svgRef = useRef(null);
@@ -7,6 +6,7 @@ const SVGEditor = ({ blueprintModel, onBlueprintChange, mode = 'view' }) => {
   const [isDrawing, setIsDrawing] = useState(false);
   const [currentPath, setCurrentPath] = useState([]);
   const [dragState, setDragState] = useState(null);
+  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
 
   // Convert mm to SVG pixels
   const mmToPixels = (mm) => mm * 3.78;
@@ -23,10 +23,10 @@ const SVGEditor = ({ blueprintModel, onBlueprintChange, mode = 'view' }) => {
   };
 
   // Handle mouse down for drawing
-  const handleMouseDown = (e) => {
+  const handleMouseDown = (event) => {
     if (mode !== 'draw') return;
     
-    const { x, y } = getMousePosition(e);
+    const { x, y } = getMousePosition(event);
     const mmPos = { x: pixelsToMm(x), y: pixelsToMm(y) };
     
     if (event.button === 0) { // Left click
@@ -37,12 +37,13 @@ const SVGEditor = ({ blueprintModel, onBlueprintChange, mode = 'view' }) => {
 
   // Handle mouse move for drawing
   const handleMouseMove = (event) => {
-    if (!isDrawing || mode !== 'draw') return;
-    
     const { x, y } = getMousePosition(event);
-    const mmPos = { x: pixelsToMm(x), y: pixelsToMm(y) };
+    setMousePos({ x, y });
     
-    setCurrentPath(prev => [...prev, mmPos]);
+    if (isDrawing && mode === 'draw') {
+      const mmPos = { x: pixelsToMm(x), y: pixelsToMm(y) };
+      setCurrentPath(prev => [...prev, mmPos]);
+    }
   };
 
   // Handle mouse up to finish drawing
@@ -71,8 +72,8 @@ const SVGEditor = ({ blueprintModel, onBlueprintChange, mode = 'view' }) => {
   };
 
   // Handle shape selection
-  const handleShapeClick = (e, shapeId) => {
-    e.stopPropagation();
+  const handleShapeClick = (event, shapeId) => {
+    event.stopPropagation();
     setSelectedShape(shapeId);
   };
 
@@ -221,6 +222,32 @@ const SVGEditor = ({ blueprintModel, onBlueprintChange, mode = 'view' }) => {
 
   return (
     <div className="svg-editor">
+      <div className="editor-controls">
+        <div className="mode-buttons">
+          <button 
+            className={`mode-btn ${mode === 'view' ? 'active' : ''}`}
+            onClick={() => setSelectedShape(null)}
+          >
+            👁️ View
+          </button>
+          <button 
+            className={`mode-btn ${mode === 'edit' ? 'active' : ''}`}
+            onClick={() => setSelectedShape(null)}
+          >
+            ✏️ Edit
+          </button>
+          <button 
+            className={`mode-btn ${mode === 'draw' ? 'active' : ''}`}
+            onClick={() => setSelectedShape(null)}
+          >
+            🖊️ Draw
+          </button>
+        </div>
+        <div className="mouse-coords">
+          Mouse: {Math.round(pixelsToMm(mousePos.x))}mm, {Math.round(pixelsToMm(mousePos.y))}mm
+        </div>
+      </div>
+      
       <svg
         ref={svgRef}
         viewBox={blueprintModel.getViewBox()}
@@ -230,6 +257,7 @@ const SVGEditor = ({ blueprintModel, onBlueprintChange, mode = 'view' }) => {
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
         className="blueprint-svg"
+        style={{ cursor: mode === 'draw' ? 'crosshair' : 'default' }}
       >
         {/* Grid background */}
         <defs>
@@ -250,11 +278,6 @@ const SVGEditor = ({ blueprintModel, onBlueprintChange, mode = 'view' }) => {
         {/* Render current drawing path */}
         {renderCurrentPath()}
       </svg>
-      
-      {/* Mode indicator */}
-      <div className="mode-indicator">
-        Mode: {mode === 'view' ? 'View' : mode === 'edit' ? 'Edit' : 'Draw'}
-      </div>
     </div>
   );
 };

@@ -6,6 +6,7 @@ import EmailConfirmationPage from './pages/EmailConfirmationPage';
 import LandingPage from './pages/LandingPage';
 import GardenDetailPage from './pages/GardenDetailPage';
 import BlueprintTestPage from './components/EmptyGardenWizard/BlueprintTestPage';
+import DrawingTest from './components/EmptyGardenWizard/DrawingTest';
 
 function App() {
   const [userEmail, setUserEmail] = useState('');
@@ -68,6 +69,10 @@ function App() {
         <Route 
           path="/test-blueprint" 
           element={<BlueprintTestPage />} 
+        />
+        <Route 
+          path="/test-drawing" 
+          element={<DrawingTest />} 
         />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

@@ -19,27 +19,21 @@ const EmptyGardenWizard = ({ onClose, onGardenCreated, userEmail }) => {
   const steps = [
     { 
       number: 1, 
-      title: 'House Front', 
-      description: 'Select and customize your house front design',
-      component: 'house-front'
+      title: 'House & Walls', 
+      description: 'Add house front and boundary walls',
+      component: 'house-walls'
     },
     { 
       number: 2, 
-      title: 'Boundary Walls', 
-      description: 'Configure your garden boundaries',
-      component: 'walls'
+      title: 'Draw Layout', 
+      description: 'Draw pathways, driveways, and garden areas',
+      component: 'draw'
     },
     { 
       number: 3, 
-      title: 'Pathways', 
-      description: 'Draw driveways, walkways, and garden areas',
-      component: 'pathways'
-    },
-    { 
-      number: 4, 
-      title: 'Review', 
-      description: 'Review and finalize your garden blueprint',
-      component: 'review'
+      title: 'Save', 
+      description: 'Name and save your blueprint',
+      component: 'save'
     }
   ];
 
@@ -116,39 +110,41 @@ const EmptyGardenWizard = ({ onClose, onGardenCreated, userEmail }) => {
       case 1:
         return (
           <div className="step-content">
-            <HouseFrontSelector 
-              blueprintModel={blueprintModel}
-              onBlueprintChange={handleBlueprintChange}
-            />
+            <div className="step-section">
+              <h4>🏠 House Front</h4>
+              <HouseFrontSelector 
+                blueprintModel={blueprintModel}
+                onBlueprintChange={handleBlueprintChange}
+              />
+            </div>
+            <div className="step-section">
+              <h4>🧱 Boundary Walls</h4>
+              <WallConfigurator 
+                blueprintModel={blueprintModel}
+                onBlueprintChange={handleBlueprintChange}
+              />
+            </div>
           </div>
         );
 
       case 2:
         return (
           <div className="step-content">
-            <WallConfigurator 
-              blueprintModel={blueprintModel}
-              onBlueprintChange={handleBlueprintChange}
-            />
+            <div className="step-section">
+              <h4>🛤️ Draw Layout</h4>
+              <PathwayEditor 
+                blueprintModel={blueprintModel}
+                onBlueprintChange={handleBlueprintChange}
+              />
+            </div>
           </div>
         );
 
       case 3:
         return (
           <div className="step-content">
-            <PathwayEditor 
-              blueprintModel={blueprintModel}
-              onBlueprintChange={handleBlueprintChange}
-            />
-          </div>
-        );
-
-      case 4:
-        return (
-          <div className="step-content">
             <div className="review-content">
-              <h3>Review Your Garden Blueprint</h3>
-              <p>Take a final look at your garden design before saving</p>
+              <h3>Save Your Blueprint</h3>
               
               <div className="garden-name-input">
                 <label htmlFor="garden-name">Garden Name *</label>
@@ -163,12 +159,12 @@ const EmptyGardenWizard = ({ onClose, onGardenCreated, userEmail }) => {
               </div>
               
               <div className="blueprint-summary">
-                <h4>Blueprint Summary:</h4>
+                <h4>Elements in your blueprint:</h4>
                 <ul>
-                  <li>House Front: {blueprintModel.data.templates.selected || 'Not selected'}</li>
-                  <li>Boundary Configuration: {blueprintModel.getShapesByRole('boundary').length > 0 ? 'Configured' : 'Not configured'}</li>
+                  <li>House Front: {blueprintModel.data.templates.selected || 'Not added'}</li>
+                  <li>Boundary Walls: {blueprintModel.getShapesByRole('boundary').length > 0 ? 'Added' : 'Not added'}</li>
                   <li>Pathways: {blueprintModel.getShapesByRole('pathway').length} drawn</li>
-                  <li>Garden Beds: {blueprintModel.getShapesByRole('gardenBed').length} defined</li>
+                  <li>Garden Areas: {blueprintModel.getShapesByRole('gardenBed').length} defined</li>
                 </ul>
               </div>
             </div>
@@ -181,33 +177,8 @@ const EmptyGardenWizard = ({ onClose, onGardenCreated, userEmail }) => {
   };
 
   const renderEditor = () => {
-    if (currentStep === 4) return null; // Don't show editor on review step
-    
     return (
       <div className="editor-panel">
-        <div className="editor-controls">
-          <div className="mode-buttons">
-            <button 
-              className={`mode-btn ${editorMode === 'view' ? 'active' : ''}`}
-              onClick={() => setEditorMode('view')}
-            >
-              👁️ View
-            </button>
-            <button 
-              className={`mode-btn ${editorMode === 'edit' ? 'active' : ''}`}
-              onClick={() => setEditorMode('edit')}
-            >
-              ✏️ Edit
-            </button>
-            <button 
-              className={`mode-btn ${editorMode === 'draw' ? 'active' : ''}`}
-              onClick={() => setEditorMode('draw')}
-            >
-              🖊️ Draw
-            </button>
-          </div>
-        </div>
-        
         <SVGEditor
           blueprintModel={blueprintModel}
           onBlueprintChange={handleBlueprintChange}
@@ -219,63 +190,67 @@ const EmptyGardenWizard = ({ onClose, onGardenCreated, userEmail }) => {
 
   return (
     <div className="empty-garden-wizard">
-      <div className="wizard-header">
-        <TypewriterText delay={100}>
+      <div className="wizard-modal">
+        <div className="wizard-header">
           <h2 className="wizard-title">CREATE EMPTY GARDEN BLUEPRINT</h2>
-        </TypewriterText>
-        <button className="close-btn" onClick={onClose}>×</button>
-      </div>
+          <button className="close-btn" onClick={onClose}>×</button>
+        </div>
 
-      <div className="wizard-layout">
-        <div className="wizard-sidebar">
-          <div className="wizard-progress">
-            {steps.map((step) => (
-              <div key={step.number} className={`progress-step ${currentStep >= step.number ? 'active' : ''}`}>
-                <div className="step-number">{step.number}</div>
-                <div className="step-info">
-                  <div className="step-title-small">{step.title}</div>
-                  <div className="step-desc-small">{step.description}</div>
+        <div className="wizard-layout">
+          <div className="wizard-sidebar">
+            <div className="wizard-progress">
+              {steps.map((step) => (
+                <div key={step.number} className={`progress-step ${currentStep >= step.number ? 'active' : ''}`}>
+                  <div className="step-number">{step.number}</div>
+                  <div className="step-info">
+                    <div className="step-title-small">{step.title}</div>
+                    <div className="step-desc-small">{step.description}</div>
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
+            
+            <div className="step-content-wrapper">
+              {renderStepContent()}
+            </div>
+          </div>
+
+          <div className="wizard-main">
+            {renderEditor()}
+          </div>
+        </div>
+
+        {error && <div className="error-message">{error}</div>}
+
+        <div className="wizard-actions">
+          <div className="action-left">
+            {currentStep > 1 && (
+              <Button onClick={prevStep} className="secondary-btn">
+                ← PREVIOUS
+              </Button>
+            )}
           </div>
           
-          <div className="step-content-wrapper">
-            {renderStepContent()}
+          <div className="action-right">
+            {currentStep < steps.length ? (
+              <Button 
+                onClick={nextStep} 
+                disabled={!validateStep(currentStep)}
+                className="primary-btn"
+              >
+                NEXT →
+              </Button>
+            ) : (
+              <Button 
+                onClick={handleSaveGarden} 
+                disabled={loading || !gardenName.trim()}
+                className="primary-btn"
+              >
+                {loading ? 'SAVING...' : 'SAVE BLUEPRINT 📐'}
+              </Button>
+            )}
           </div>
         </div>
-
-        <div className="wizard-main">
-          {renderEditor()}
-        </div>
-      </div>
-
-      {error && <div className="error-message">{error}</div>}
-
-      <div className="wizard-actions">
-        {currentStep > 1 && (
-          <Button onClick={prevStep} className="secondary-btn">
-            ← PREVIOUS
-          </Button>
-        )}
-        
-        {currentStep < steps.length ? (
-          <Button 
-            onClick={nextStep} 
-            disabled={!validateStep(currentStep)}
-            className="primary-btn"
-          >
-            NEXT →
-          </Button>
-        ) : (
-          <Button 
-            onClick={handleSaveGarden} 
-            disabled={loading || !gardenName.trim()}
-            className="primary-btn"
-          >
-            {loading ? 'SAVING BLUEPRINT...' : 'SAVE BLUEPRINT 📐'}
-          </Button>
-        )}
       </div>
     </div>
   );

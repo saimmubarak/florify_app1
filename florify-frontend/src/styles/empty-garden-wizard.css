@@ -6,11 +6,28 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  z-index: 1000;
+  background: rgba(0, 0, 0, 0.8);
+  z-index: 10000;
   display: flex;
   flex-direction: column;
   font-family: 'Arial', sans-serif;
+}
+
+.wizard-modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 95vw;
+  height: 90vh;
+  max-width: 1400px;
+  max-height: 900px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 .wizard-header {
@@ -55,15 +72,16 @@
   display: flex;
   flex: 1;
   overflow: hidden;
+  min-height: 0;
 }
 
 .wizard-sidebar {
-  width: 400px;
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(10px);
+  width: 350px;
+  background: #f8f9fa;
   display: flex;
   flex-direction: column;
-  border-right: 1px solid rgba(0, 0, 0, 0.1);
+  border-right: 1px solid #dee2e6;
+  overflow: hidden;
 }
 
 .wizard-progress {
@@ -127,6 +145,25 @@
 
 .step-content {
   height: 100%;
+  overflow-y: auto;
+}
+
+.step-section {
+  margin-bottom: 25px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.step-section:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+}
+
+.step-section h4 {
+  margin: 0 0 15px 0;
+  color: #2c3e50;
+  font-size: 16px;
+  font-weight: 600;
 }
 
 .wizard-main {
@@ -134,6 +171,7 @@
   display: flex;
   flex-direction: column;
   background: white;
+  min-height: 0;
 }
 
 .editor-panel {
@@ -178,6 +216,92 @@
   flex: 1;
   position: relative;
   background: white;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.editor-controls {
+  padding: 10px 15px;
+  background: #f8f9fa;
+  border-bottom: 1px solid #dee2e6;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.mode-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.mode-btn {
+  padding: 6px 12px;
+  border: 1px solid #dee2e6;
+  background: white;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.mode-btn:hover {
+  background: #e9ecef;
+  border-color: #667eea;
+}
+
+.mode-btn.active {
+  background: #667eea;
+  color: white;
+  border-color: #667eea;
+}
+
+.mouse-coords {
+  font-size: 11px;
+  color: #6c757d;
+  font-family: 'Courier New', monospace;
+}
+
+.blueprint-svg {
+  flex: 1;
+  width: 100%;
+  height: 100%;
+  min-height: 400px;
+  background: white;
+  border: 1px solid #dee2e6;
+}
+
+/* SVG Elements */
+.shape {
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.shape:hover {
+  stroke-width: 2px;
+  filter: drop-shadow(0 0 3px rgba(102, 126, 234, 0.3));
+}
+
+.shape.selected {
+  stroke-width: 3px;
+  filter: drop-shadow(0 0 6px rgba(102, 126, 234, 0.6));
+}
+
+.current-path {
+  animation: dash 1s linear infinite;
+}
+
+@keyframes dash {
+  to {
+    stroke-dashoffset: -10;
+  }
+}
+
+.opening {
+  pointer-events: none;
+  stroke-dasharray: 2,2;
 }
 
 .blueprint-svg {
@@ -852,13 +976,18 @@
 
 /* Wizard Actions */
 .wizard-actions {
-  padding: 20px 30px;
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(10px);
-  border-top: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 15px 20px;
+  background: #f8f9fa;
+  border-top: 1px solid #dee2e6;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-shrink: 0;
+}
+
+.action-left, .action-right {
+  display: flex;
+  gap: 10px;
 }
 
 .error-message {
