@@ -204,6 +204,13 @@
   margin-bottom: 40px;
 }
 
+.cta-buttons {
+  display: flex;
+  gap: 15px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
 .create-garden-cta {
   background: #144345;
   color: white;
@@ -249,6 +256,49 @@
 .create-garden-cta span {
   position: relative;
   z-index: 1;
+}
+
+.create-blueprint-cta {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  padding: 20px 45px;
+  border-radius: 50px;
+  font-size: 16px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  cursor: pointer;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  font-family: 'Poppins', sans-serif;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+}
+
+.create-blueprint-cta::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s;
+}
+
+.create-blueprint-cta:hover::before {
+  left: 100%;
+}
+
+.create-blueprint-cta:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 35px rgba(102, 126, 234, 0.4);
+}
+
+.create-blueprint-cta span {
+  position: relative;
+  z-index: 2;
 }
 
 /* ==================== HERO IMAGE ==================== */
@@ -464,6 +514,13 @@
   max-width: 400px;
   margin-left: auto;
   margin-right: auto;
+}
+
+.empty-state-actions {
+  display: flex;
+  gap: 15px;
+  flex-wrap: wrap;
+  justify-content: center;
 }
 
 /* ==================== MODAL STYLES ==================== */

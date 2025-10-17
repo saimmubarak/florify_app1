@@ -5,6 +5,7 @@ import SignupPage from './pages/SignupPage';
 import EmailConfirmationPage from './pages/EmailConfirmationPage';
 import LandingPage from './pages/LandingPage';
 import GardenDetailPage from './pages/GardenDetailPage';
+import BlueprintTestPage from './components/EmptyGardenWizard/BlueprintTestPage';
 
 function App() {
   const [userEmail, setUserEmail] = useState('');
@@ -63,6 +64,10 @@ function App() {
             <GardenDetailPage /> : 
             <Navigate to="/login" replace />
           } 
+        />
+        <Route 
+          path="/test-blueprint" 
+          element={<BlueprintTestPage />} 
         />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
