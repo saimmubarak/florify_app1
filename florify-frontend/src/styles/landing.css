@@ -199,14 +199,19 @@
   font-weight: 400;
 }
 
-/* ==================== CTA BUTTON ==================== */
+/* ==================== CTA BUTTONS ==================== */
 .cta-container {
   margin-bottom: 40px;
 }
 
+.cta-buttons {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
 .create-garden-cta {
-  background: #144345;
-  color: white;
   border: none;
   padding: 20px 45px;
   border-radius: 50px;
@@ -223,6 +228,18 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  min-width: 200px;
+}
+
+.create-garden-cta.primary {
+  background: #144345;
+  color: white;
+}
+
+.create-garden-cta.secondary {
+  background: transparent;
+  color: #144345;
+  border: 3px solid #144345;
 }
 
 .create-garden-cta::before {
@@ -244,6 +261,11 @@
 .create-garden-cta:hover {
   transform: translateY(-2px);
   box-shadow: 0 8px 25px rgba(20, 67, 69, 0.4);
+}
+
+.create-garden-cta.secondary:hover {
+  background: #144345;
+  color: white;
 }
 
 .create-garden-cta span {
