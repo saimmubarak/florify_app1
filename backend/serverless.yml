@@ -1,70 +1,129 @@
-service: florify-auth
+service: florify-simple
 
 provider:
   name: aws
   runtime: python3.9
   region: eu-north-1
+  stage: dev
   environment:
     CLIENT_ID: 76i7it21omdm3n80nf9j9dc2oc
-    USER_POOL_ID: eu-north-1_i7vhr8PxH
+    COGNITO_USER_POOL_ID: eu-north-1_i7vhr8PxH
+    COGNITO_REGION: eu-north-1
+    GARDENS_TABLE: florify-gardens-dev
   iam:
     role:
       statements:
-        - Effect: "Allow"
+        - Effect: Allow
           Action:
-            - cognito-idp:SignUp
-            - cognito-idp:ConfirmSignUp
-            - cognito-idp:ResendConfirmationCode
-            - cognito-idp:InitiateAuth
+            - cognito-idp:*
+          Resource: "*"
+        - Effect: Allow
+          Action:
+            - dynamodb:*
+          Resource: "*"
+        - Effect: Allow
+          Action:
+            - logs:*
           Resource: "*"
 
-  httpApi:
-    cors:
-      allowedOrigins:
-        - "http://localhost:5173"
-        - "*"  # you can remove this after testing
-      allowedHeaders:
-        - Content-Type
-        - Authorization
-      allowedMethods:
-        - GET
-        - POST
-        - OPTIONS
-      allowCredentials: false
-
 functions:
+  # Authentication
   signup:
     handler: signup_handler.handler
     events:
-      - httpApi:
-          path: /signup
+      - http:
+          path: signup
           method: post
-
-  confirm:
-    handler: confirm_handler.handler
-    events:
-      - httpApi:
-          path: /confirm
-          method: post
-
-  resend:
-    handler: resend_handler.handler
-    events:
-      - httpApi:
-          path: /resend
-          method: post
+          cors: true
 
   login:
     handler: login_handler.handler
     events:
-      - httpApi:
-          path: /login
+      - http:
+          path: login
           method: post
+          cors: true
 
-plugins:
-  - serverless-python-requirements
+  confirm:
+    handler: confirm_handler.handler
+    events:
+      - http:
+          path: confirm
+          method: post
+          cors: true
 
-package:
-  exclude:
-    - node_modules/**
-    - .venv/**
+  resend:
+    handler: resend_handler.handler
+    events:
+      - http:
+          path: resend
+          method: post
+          cors: true
+
+  # Gardens
+  create-garden:
+    handler: create_garden_handler.handler
+    events:
+      - http:
+          path: gardens
+          method: post
+          cors: true
+
+  get-gardens:
+    handler: get_gardens_handler.handler
+    events:
+      - http:
+          path: gardens
+          method: get
+          cors: true
+
+  get-garden:
+    handler: get_garden_handler.handler
+    events:
+      - http:
+          path: gardens/{gardenId}
+          method: get
+          cors: true
+
+  update-garden:
+    handler: update_garden_handler.handler
+    events:
+      - http:
+          path: gardens/{gardenId}
+          method: put
+          cors: true
+
+  delete-garden:
+    handler: delete_garden_handler.handler
+    events:
+      - http:
+          path: gardens/{gardenId}
+          method: delete
+          cors: true
+
+  # Test
+  hello:
+    handler: handler.hello
+    events:
+      - http:
+          path: hello
+          method: get
+          cors: true
+
+resources:
+  Resources:
+    GardensTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: florify-gardens-dev
+        AttributeDefinitions:
+          - AttributeName: userId
+            AttributeType: S
+          - AttributeName: gardenId
+            AttributeType: S
+        KeySchema:
+          - AttributeName: userId
+            KeyType: HASH
+          - AttributeName: gardenId
+            KeyType: RANGE
+        BillingMode: PAY_PER_REQUEST
