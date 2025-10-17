@@ -5,6 +5,11 @@ import SignupPage from './pages/SignupPage';
 import EmailConfirmationPage from './pages/EmailConfirmationPage';
 import LandingPage from './pages/LandingPage';
 import GardenDetailPage from './pages/GardenDetailPage';
+import BlueprintTestPage from './components/EmptyGardenWizard/BlueprintTestPage';
+import DrawingTest from './components/EmptyGardenWizard/DrawingTest';
+import SimpleDrawingTest from './components/EmptyGardenWizard/SimpleDrawingTest';
+import SectionedDrawingTest from './components/EmptyGardenWizard/SectionedDrawingTest';
+import ImageDownloadTest from './components/EmptyGardenWizard/ImageDownloadTest';
 
 function App() {
   const [userEmail, setUserEmail] = useState('');
@@ -63,6 +68,26 @@ function App() {
             <GardenDetailPage /> : 
             <Navigate to="/login" replace />
           } 
+        />
+        <Route 
+          path="/test-blueprint" 
+          element={<BlueprintTestPage />} 
+        />
+        <Route 
+          path="/test-drawing" 
+          element={<DrawingTest />} 
+        />
+        <Route 
+          path="/simple-drawing" 
+          element={<SimpleDrawingTest />} 
+        />
+        <Route 
+          path="/sectioned-drawing" 
+          element={<SectionedDrawingTest />} 
+        />
+        <Route 
+          path="/image-download" 
+          element={<ImageDownloadTest />} 
         />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
