@@ -28,8 +28,8 @@ const EmptyGardenWizard = ({ onClose, onGardenCreated, userEmail }) => {
     },
     { 
       number: 2, 
-      title: 'Download PDF', 
-      description: 'Download your blueprint as a PDF file',
+      title: 'Download Image', 
+      description: 'Download your blueprint as a high-quality image',
       component: 'download'
     },
     { 
@@ -141,22 +141,22 @@ const EmptyGardenWizard = ({ onClose, onGardenCreated, userEmail }) => {
         return (
           <div className="step-content">
             <div className="pdf-download-section">
-              <h4>📄 Download Your Blueprint</h4>
-              <p>Your garden blueprint is ready! You can download it as a high-quality PDF file that's perfect for printing or sharing.</p>
+              <h4>🖼️ Download Your Blueprint</h4>
+              <p>Your garden blueprint is ready! You can download it as a high-quality image file that's perfect for printing or sharing.</p>
               
               <div className="download-features">
                 <div className="feature-item">
                   <span className="feature-icon">🖨️</span>
                   <div className="feature-text">
                     <strong>Print Ready</strong>
-                    <p>Optimized for A4 paper size</p>
+                    <p>High-resolution image for printing</p>
                   </div>
                 </div>
                 <div className="feature-item">
                   <span className="feature-icon">🎨</span>
                   <div className="feature-text">
                     <strong>High Quality</strong>
-                    <p>Vector graphics for crisp printing</p>
+                    <p>PNG format for crisp printing</p>
                   </div>
                 </div>
                 <div className="feature-item">

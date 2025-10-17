@@ -1,6 +1,4 @@
 import React, { useRef, useState } from 'react';
-import jsPDF from 'jspdf';
-import html2canvas from 'html2canvas';
 
 const BlueprintPDFDownloader = ({ blueprintModel, gardenName }) => {
   const svgRef = useRef(null);
@@ -10,79 +8,100 @@ const BlueprintPDFDownloader = ({ blueprintModel, gardenName }) => {
     setIsGenerating(true);
     
     try {
-      // Create a new PDF document
-      const pdf = new jsPDF({
-        orientation: 'landscape',
-        unit: 'mm',
-        format: 'a4'
-      });
-
       // Get the SVG element
       const svgElement = svgRef.current;
       if (!svgElement) {
         throw new Error('SVG element not found');
       }
 
-      // Convert SVG to canvas
-      const canvas = await html2canvas(svgElement, {
-        scale: 2,
-        useCORS: true,
-        allowTaint: true,
-        backgroundColor: '#ffffff'
+      // Convert SVG to data URL
+      const svgData = new XMLSerializer().serializeToString(svgElement);
+      const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
+      const svgUrl = URL.createObjectURL(svgBlob);
+
+      // Create a canvas to convert SVG to PNG
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      const img = new Image();
+
+      return new Promise((resolve, reject) => {
+        img.onload = () => {
+          // Set canvas size for A4 landscape (297x210mm at 300 DPI)
+          const dpi = 300;
+          const mmToInch = 0.0393701;
+          const width = 297 * mmToInch * dpi; // A4 landscape width
+          const height = 210 * mmToInch * dpi; // A4 landscape height
+          
+          canvas.width = width;
+          canvas.height = height;
+          
+          // Fill with white background
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(0, 0, width, height);
+          
+          // Draw the SVG image
+          ctx.drawImage(img, 50, 50, width - 100, height - 200);
+          
+          // Add title
+          ctx.fillStyle = '#2c3e50';
+          ctx.font = 'bold 24px Arial';
+          ctx.textAlign = 'center';
+          ctx.fillText(gardenName || 'Garden Blueprint', width / 2, 30);
+          
+          // Add date
+          ctx.font = '12px Arial';
+          ctx.fillText(`Generated on: ${new Date().toLocaleDateString()}`, width / 2, 50);
+          
+          // Add legend
+          const legendY = height - 120;
+          ctx.font = 'bold 16px Arial';
+          ctx.textAlign = 'left';
+          ctx.fillText('Legend:', 50, legendY);
+          
+          ctx.font = '12px Arial';
+          const legendItems = [
+            { color: '#e74c3c', label: 'Buildings' },
+            { color: '#7f8c8d', label: 'Pathways' },
+            { color: '#8e44ad', label: 'Boundary Walls' }
+          ];
+          
+          legendItems.forEach((item, index) => {
+            const y = legendY + 20 + (index * 20);
+            ctx.fillStyle = item.color;
+            ctx.fillRect(50, y - 10, 15, 10);
+            ctx.fillStyle = '#2c3e50';
+            ctx.fillText(item.label, 75, y);
+          });
+          
+          // Add scale information
+          ctx.fillText('Scale: 1:100 (1mm = 1cm)', 50, legendY + 80);
+          
+          // Convert to blob and download
+          canvas.toBlob((blob) => {
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${gardenName || 'garden-blueprint'}.png`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            URL.revokeObjectURL(svgUrl);
+            resolve();
+          }, 'image/png');
+        };
+        
+        img.onerror = () => {
+          URL.revokeObjectURL(svgUrl);
+          reject(new Error('Failed to load SVG'));
+        };
+        
+        img.src = svgUrl;
       });
-
-      // Calculate dimensions for A4 landscape
-      const pdfWidth = 297; // A4 landscape width in mm
-      const pdfHeight = 210; // A4 landscape height in mm
-      const imgWidth = pdfWidth - 20; // Leave margins
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
-
-      // Add title
-      pdf.setFontSize(20);
-      pdf.setFont('helvetica', 'bold');
-      pdf.text(gardenName || 'Garden Blueprint', 10, 15);
-
-      // Add date
-      pdf.setFontSize(10);
-      pdf.setFont('helvetica', 'normal');
-      pdf.text(`Generated on: ${new Date().toLocaleDateString()}`, 10, 22);
-
-      // Add the blueprint image
-      const imgData = canvas.toDataURL('image/png');
-      pdf.addImage(imgData, 'PNG', 10, 30, imgWidth, Math.min(imgHeight, pdfHeight - 40));
-
-      // Add legend
-      const legendY = Math.min(30 + imgHeight + 10, pdfHeight - 20);
-      pdf.setFontSize(12);
-      pdf.setFont('helvetica', 'bold');
-      pdf.text('Legend:', 10, legendY);
-
-      pdf.setFontSize(10);
-      pdf.setFont('helvetica', 'normal');
-      
-      // Add legend items
-      const legendItems = [
-        { color: '#e74c3c', label: 'Buildings' },
-        { color: '#7f8c8d', label: 'Pathways' },
-        { color: '#8e44ad', label: 'Boundary Walls' }
-      ];
-
-      legendItems.forEach((item, index) => {
-        const y = legendY + 8 + (index * 6);
-        pdf.setFillColor(item.color);
-        pdf.rect(10, y - 2, 3, 3, 'F');
-        pdf.text(item.label, 16, y);
-      });
-
-      // Add scale information
-      pdf.text('Scale: 1:100 (1mm = 1cm)', 10, legendY + 30);
-
-      // Save the PDF
-      pdf.save(`${gardenName || 'garden-blueprint'}.pdf`);
       
     } catch (error) {
       console.error('Error generating PDF:', error);
-      alert('Error generating PDF. Please try again.');
+      alert('Error generating image. Please try again.');
     } finally {
       setIsGenerating(false);
     }
@@ -158,7 +177,7 @@ const BlueprintPDFDownloader = ({ blueprintModel, gardenName }) => {
       <div className="pdf-actions">
         <div className="pdf-info">
           <h4>Download Your Blueprint</h4>
-          <p>Your garden blueprint is ready! Download it as a PDF to print or share.</p>
+          <p>Your garden blueprint is ready! Download it as a high-quality image to print or share.</p>
           
           <div className="blueprint-details">
             <div className="detail-item">
@@ -171,7 +190,7 @@ const BlueprintPDFDownloader = ({ blueprintModel, gardenName }) => {
               <strong>Scale:</strong> 1:100 (1mm = 1cm)
             </div>
             <div className="detail-item">
-              <strong>Format:</strong> A4 Landscape
+              <strong>Format:</strong> High-Quality PNG Image
             </div>
           </div>
         </div>
@@ -184,20 +203,20 @@ const BlueprintPDFDownloader = ({ blueprintModel, gardenName }) => {
           {isGenerating ? (
             <>
               <span className="spinner"></span>
-              Generating PDF...
+              Generating Image...
             </>
           ) : (
             <>
-              📄 Download PDF
+              🖼️ Download Image
             </>
           )}
         </button>
 
         <div className="pdf-features">
-          <h5>PDF Features:</h5>
+          <h5>Image Features:</h5>
           <ul>
-            <li>✅ High-quality vector graphics</li>
-            <li>✅ Print-ready A4 format</li>
+            <li>✅ High-quality PNG format</li>
+            <li>✅ Print-ready resolution</li>
             <li>✅ Color-coded legend</li>
             <li>✅ Scale information</li>
             <li>✅ Professional layout</li>
