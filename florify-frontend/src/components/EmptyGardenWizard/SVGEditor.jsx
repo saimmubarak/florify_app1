@@ -17,10 +17,22 @@ const SVGEditor = ({ blueprintModel, onBlueprintChange, mode = 'draw' }) => {
 
   // Get mouse position relative to SVG
   const getMousePosition = (event) => {
+    if (!svgRef.current) return { x: 0, y: 0 };
+    
     const rect = svgRef.current.getBoundingClientRect();
-    const x = event.clientX - rect.left;
-    const y = event.clientY - rect.top;
-    return { x, y };
+    const svg = svgRef.current;
+    const viewBox = svg.getAttribute('viewBox');
+    
+    if (viewBox) {
+      const [minX, minY, width, height] = viewBox.split(' ').map(Number);
+      const x = ((event.clientX - rect.left) / rect.width) * width + minX;
+      const y = ((event.clientY - rect.top) / rect.height) * height + minY;
+      return { x, y };
+    } else {
+      const x = event.clientX - rect.left;
+      const y = event.clientY - rect.top;
+      return { x, y };
+    }
   };
 
   // Handle mouse down for drawing

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { BlueprintModel } from './BlueprintModel';
 import SVGEditor from './SVGEditor';
+import SectionedDrawingEditor from './SectionedDrawingEditor';
 import HouseFrontSelector from './HouseFrontSelector';
 import WallConfigurator from './WallConfigurator';
 import PathwayEditor from './PathwayEditor';
@@ -12,6 +13,7 @@ const EmptyGardenWizard = ({ onClose, onGardenCreated, userEmail }) => {
   const [blueprintModel] = useState(() => new BlueprintModel());
   const [blueprintData, setBlueprintData] = useState(blueprintModel.toJSON());
   const [editorMode, setEditorMode] = useState('draw');
+  const [useSectionedDrawing, setUseSectionedDrawing] = useState(true);
   const [gardenName, setGardenName] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -20,7 +22,7 @@ const EmptyGardenWizard = ({ onClose, onGardenCreated, userEmail }) => {
     { 
       number: 1, 
       title: 'Draw Your Garden', 
-      description: 'Use drawing tools to create your garden blueprint',
+      description: 'Use sectioned drawing to create your garden blueprint',
       component: 'draw'
     },
     { 
@@ -110,28 +112,25 @@ const EmptyGardenWizard = ({ onClose, onGardenCreated, userEmail }) => {
       case 1:
         return (
           <div className="step-content">
-            <div className="drawing-instructions-panel">
-              <h4>🎨 Drawing Tools</h4>
-              <div className="tool-descriptions">
-                <div className="tool-desc">
-                  <strong>📏 Line Tool:</strong> Click and drag to draw straight lines
-                </div>
-                <div className="tool-desc">
-                  <strong>⬜ Rectangle Tool:</strong> Click and drag to draw rectangles
-                </div>
-                <div className="tool-desc">
-                  <strong>🔷 Polygon Tool:</strong> Click to add points, double-click to finish
-                </div>
-              </div>
-              
-              <div className="drawing-tips">
-                <h5>Drawing Tips:</h5>
-                <ul>
-                  <li>Use the grid as a guide for measurements</li>
-                  <li>Switch to Edit mode to move existing shapes</li>
-                  <li>Switch to View mode to just look at your drawing</li>
-                  <li>Mouse coordinates are shown in the toolbar</li>
-                </ul>
+            <div className="drawing-mode-selector">
+              <h4>🎨 Choose Drawing Mode</h4>
+              <div className="mode-options">
+                <button 
+                  className={`mode-option ${useSectionedDrawing ? 'active' : ''}`}
+                  onClick={() => setUseSectionedDrawing(true)}
+                >
+                  <div className="mode-icon">📋</div>
+                  <div className="mode-title">Sectioned Drawing</div>
+                  <div className="mode-desc">Draw in steps: buildings, pathways, walls</div>
+                </button>
+                <button 
+                  className={`mode-option ${!useSectionedDrawing ? 'active' : ''}`}
+                  onClick={() => setUseSectionedDrawing(false)}
+                >
+                  <div className="mode-icon">🖊️</div>
+                  <div className="mode-title">Free Drawing</div>
+                  <div className="mode-desc">Draw freely with all tools</div>
+                </button>
               </div>
             </div>
           </div>
@@ -195,11 +194,18 @@ const EmptyGardenWizard = ({ onClose, onGardenCreated, userEmail }) => {
   const renderEditor = () => {
     return (
       <div className="editor-panel">
-        <SVGEditor
-          blueprintModel={blueprintModel}
-          onBlueprintChange={handleBlueprintChange}
-          mode={editorMode}
-        />
+        {useSectionedDrawing ? (
+          <SectionedDrawingEditor
+            blueprintModel={blueprintModel}
+            onBlueprintChange={handleBlueprintChange}
+          />
+        ) : (
+          <SVGEditor
+            blueprintModel={blueprintModel}
+            onBlueprintChange={handleBlueprintChange}
+            mode={editorMode}
+          />
+        )}
       </div>
     );
   };

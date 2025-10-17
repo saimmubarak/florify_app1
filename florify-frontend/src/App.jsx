@@ -8,6 +8,7 @@ import GardenDetailPage from './pages/GardenDetailPage';
 import BlueprintTestPage from './components/EmptyGardenWizard/BlueprintTestPage';
 import DrawingTest from './components/EmptyGardenWizard/DrawingTest';
 import SimpleDrawingTest from './components/EmptyGardenWizard/SimpleDrawingTest';
+import SectionedDrawingTest from './components/EmptyGardenWizard/SectionedDrawingTest';
 
 function App() {
   const [userEmail, setUserEmail] = useState('');
@@ -78,6 +79,10 @@ function App() {
         <Route 
           path="/simple-drawing" 
           element={<SimpleDrawingTest />} 
+        />
+        <Route 
+          path="/sectioned-drawing" 
+          element={<SectionedDrawingTest />} 
         />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

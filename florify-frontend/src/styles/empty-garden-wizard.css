@@ -216,6 +216,234 @@
   color: #2c3e50;
 }
 
+/* Sectioned Drawing Editor Styles */
+.sectioned-drawing-editor {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: white;
+}
+
+.drawing-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  background: #f8f9fa;
+  border-bottom: 1px solid #dee2e6;
+}
+
+.section-info h3 {
+  font-size: 24px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.section-info p {
+  font-size: 14px;
+  color: #6c757d;
+  margin: 5px 0 0 0;
+}
+
+.section-progress {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.progress-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #dee2e6;
+  transition: all 0.3s ease;
+}
+
+.progress-dot.active {
+  transform: scale(1.3);
+  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.1);
+}
+
+.progress-dot.completed {
+  background: #27ae60;
+}
+
+.drawing-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 20px;
+  background: white;
+  border-bottom: 1px solid #dee2e6;
+}
+
+.tool-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+.tool-btn {
+  padding: 8px 16px;
+  border: 2px solid #dee2e6;
+  background: white;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.tool-btn:hover {
+  background: #f8f9fa;
+  border-color: #3498db;
+}
+
+.tool-btn.active {
+  background: #3498db;
+  color: white;
+  border-color: #3498db;
+}
+
+.drawing-canvas {
+  flex: 1;
+  min-height: 0;
+  position: relative;
+}
+
+.drawing-instructions {
+  padding: 15px 20px;
+  background: #f8f9fa;
+  border-top: 1px solid #dee2e6;
+  font-size: 14px;
+}
+
+.drawing-instructions p {
+  margin: 5px 0;
+}
+
+.drawing-navigation {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  background: white;
+  border-top: 1px solid #dee2e6;
+}
+
+.nav-btn {
+  padding: 12px 24px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.prev-btn {
+  background: #6c757d;
+  color: white;
+}
+
+.prev-btn:hover:not(:disabled) {
+  background: #5a6268;
+}
+
+.prev-btn:disabled {
+  background: #dee2e6;
+  color: #6c757d;
+  cursor: not-allowed;
+}
+
+.next-btn {
+  background: #3498db;
+  color: white;
+}
+
+.next-btn:hover {
+  background: #2980b9;
+}
+
+.finish-btn {
+  background: #27ae60;
+  color: white;
+}
+
+.finish-btn:hover {
+  background: #229954;
+}
+
+.section-indicator {
+  font-size: 14px;
+  color: #6c757d;
+  font-weight: 500;
+}
+
+/* Drawing Mode Selector */
+.drawing-mode-selector {
+  padding: 20px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+.drawing-mode-selector h4 {
+  margin: 0 0 20px 0;
+  color: #2c3e50;
+  font-size: 18px;
+  text-align: center;
+}
+
+.mode-options {
+  display: flex;
+  gap: 20px;
+  justify-content: center;
+}
+
+.mode-option {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+  border: 2px solid #dee2e6;
+  border-radius: 12px;
+  background: white;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-width: 200px;
+  text-align: center;
+}
+
+.mode-option:hover {
+  border-color: #3498db;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.mode-option.active {
+  border-color: #3498db;
+  background: #f8f9ff;
+  box-shadow: 0 4px 12px rgba(52, 152, 219, 0.2);
+}
+
+.mode-icon {
+  font-size: 32px;
+  margin-bottom: 10px;
+}
+
+.mode-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #2c3e50;
+  margin-bottom: 8px;
+}
+
+.mode-desc {
+  font-size: 14px;
+  color: #6c757d;
+  line-height: 1.4;
+}
+
 .wizard-main {
   flex: 1;
   display: flex;
