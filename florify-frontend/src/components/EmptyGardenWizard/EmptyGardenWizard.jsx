@@ -15,6 +15,7 @@ const EmptyGardenWizard = ({ onClose, onGardenCreated, userEmail }) => {
   const [blueprintData, setBlueprintData] = useState(blueprintModel.toJSON());
   const [editorMode, setEditorMode] = useState('draw');
   const [useSectionedDrawing, setUseSectionedDrawing] = useState(true);
+  const [drawingSectionsCompleted, setDrawingSectionsCompleted] = useState(false);
   const [gardenName, setGardenName] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -44,6 +45,10 @@ const EmptyGardenWizard = ({ onClose, onGardenCreated, userEmail }) => {
     setBlueprintData(newData);
   };
 
+  const handleDrawingSectionsComplete = () => {
+    setDrawingSectionsCompleted(true);
+  };
+
   const nextStep = () => {
     if (currentStep < steps.length) {
       setCurrentStep(prev => prev + 1);
@@ -59,9 +64,9 @@ const EmptyGardenWizard = ({ onClose, onGardenCreated, userEmail }) => {
   const validateStep = (step) => {
     switch (step) {
       case 1:
-        return true; // Drawing step is always valid
+        return drawingSectionsCompleted || blueprintModel.data.shapes.length > 0; // Drawing completed or has shapes
       case 2:
-        return blueprintModel.data.shapes.length > 0; // Must have drawn something
+        return true; // Download step is always valid
       case 3:
         return gardenName.trim().length > 0; // Must have a name
       default:
@@ -151,7 +156,12 @@ const EmptyGardenWizard = ({ onClose, onGardenCreated, userEmail }) => {
               </div>
               
               <div className="drawing-tips">
-                <p><strong>💡 Tip:</strong> Use the "Next →" button in the drawing area to move between drawing sections (buildings → pathways → walls). Use the main "NEXT →" button below to proceed to the download step.</p>
+                <p><strong>💡 Tip:</strong> Use the "Next →" button in the drawing area to move between drawing sections (buildings → pathways → walls). Complete all drawing sections to enable the main "NEXT →" button.</p>
+                {drawingSectionsCompleted && (
+                  <p style={{ color: '#27ae60', fontWeight: 'bold', marginTop: '10px' }}>
+                    ✅ All drawing sections completed! You can now proceed to the download step.
+                  </p>
+                )}
               </div>
             </div>
           </div>
@@ -244,6 +254,7 @@ const EmptyGardenWizard = ({ onClose, onGardenCreated, userEmail }) => {
           <SectionedDrawingEditor
             blueprintModel={blueprintModel}
             onBlueprintChange={handleBlueprintChange}
+            onSectionsComplete={handleDrawingSectionsComplete}
           />
         ) : (
           <SVGEditor
@@ -306,7 +317,10 @@ const EmptyGardenWizard = ({ onClose, onGardenCreated, userEmail }) => {
                 disabled={!validateStep(currentStep)}
                 className="primary-btn"
               >
-                NEXT →
+                {currentStep === 1 && useSectionedDrawing && !drawingSectionsCompleted 
+                  ? 'COMPLETE DRAWING FIRST' 
+                  : 'NEXT →'
+                }
               </Button>
             ) : (
               <Button 

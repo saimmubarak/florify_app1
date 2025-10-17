@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 
-const SectionedDrawingEditor = ({ blueprintModel, onBlueprintChange }) => {
+const SectionedDrawingEditor = ({ blueprintModel, onBlueprintChange, onSectionsComplete }) => {
   const svgRef = useRef(null);
   const [currentSection, setCurrentSection] = useState(0);
   const [isDrawing, setIsDrawing] = useState(false);
@@ -285,9 +285,12 @@ const SectionedDrawingEditor = ({ blueprintModel, onBlueprintChange }) => {
   };
 
   const handleFinish = () => {
-    // Show completion message
+    // Notify parent that all drawing sections are completed
+    if (onSectionsComplete) {
+      onSectionsComplete();
+    }
     console.log('Drawing completed!', blueprintModel.toJSON());
-    alert('Drawing completed! You can now proceed to the next step using the main wizard navigation.');
+    alert('Drawing completed! You can now proceed to the download step using the main wizard navigation.');
   };
 
   return (
@@ -443,14 +446,14 @@ const SectionedDrawingEditor = ({ blueprintModel, onBlueprintChange }) => {
             className="nav-btn next-btn"
             onClick={handleNext}
           >
-            Next →
+            Next Section →
           </button>
         ) : (
           <button 
             className="nav-btn finish-btn"
             onClick={handleFinish}
           >
-            Finish Drawing
+            ✅ Complete All Drawing
           </button>
         )}
       </div>
