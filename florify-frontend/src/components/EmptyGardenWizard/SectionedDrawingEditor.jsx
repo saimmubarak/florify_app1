@@ -441,6 +441,7 @@ const SectionedDrawingEditor = ({ blueprintModel, onBlueprintChange, onSectionsC
           Drawing Step {currentSection + 1} of {sections.length}
         </div>
         
+        
         {canGoNext ? (
           <button 
             className="nav-btn next-btn"

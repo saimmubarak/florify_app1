@@ -653,6 +653,63 @@
   font-weight: 500;
 }
 
+/* Drawing Navigation Styles */
+.drawing-navigation {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  background: white;
+  border-top: 1px solid #dee2e6;
+  position: relative;
+  z-index: 10;
+}
+
+.nav-btn {
+  padding: 12px 24px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  position: relative;
+  z-index: 1000;
+}
+
+.prev-btn {
+  background: #6c757d;
+  color: white;
+}
+
+.prev-btn:hover:not(:disabled) {
+  background: #5a6268;
+}
+
+.prev-btn:disabled {
+  background: #dee2e6;
+  color: #6c757d;
+  cursor: not-allowed;
+}
+
+.next-btn {
+  background: #3498db;
+  color: white;
+}
+
+.next-btn:hover {
+  background: #2980b9;
+}
+
+.finish-btn {
+  background: #27ae60;
+  color: white;
+}
+
+.finish-btn:hover {
+  background: #229954;
+}
+
 /* Drawing Mode Selector */
 .drawing-mode-selector {
   padding: 20px;
