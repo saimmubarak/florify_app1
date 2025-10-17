@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 
-const SectionedDrawingEditor = ({ blueprintModel, onBlueprintChange, onDrawingComplete, showWizardNavigation = false }) => {
+const SectionedDrawingEditor = ({ blueprintModel, onBlueprintChange }) => {
   const svgRef = useRef(null);
   const [currentSection, setCurrentSection] = useState(0);
   const [isDrawing, setIsDrawing] = useState(false);
@@ -285,11 +285,9 @@ const SectionedDrawingEditor = ({ blueprintModel, onBlueprintChange, onDrawingCo
   };
 
   const handleFinish = () => {
-    // Notify parent that drawing is complete
-    if (onDrawingComplete) {
-      onDrawingComplete();
-    }
+    // Show completion message
     console.log('Drawing completed!', blueprintModel.toJSON());
+    alert('Drawing completed! You can now proceed to the next step using the main wizard navigation.');
   };
 
   return (
@@ -420,6 +418,9 @@ const SectionedDrawingEditor = ({ blueprintModel, onBlueprintChange, onDrawingCo
             <p style={{ color: currentSectionData.color, fontWeight: 'bold' }}>
               Drawing with {currentSectionData.color} color
             </p>
+            <p style={{ fontSize: '12px', color: '#6c757d', marginTop: '10px' }}>
+              <strong>Navigation:</strong> Use "Next →" below to move between drawing sections. Use the main wizard "NEXT →" button to proceed to download.
+            </p>
           </div>
         </div>
       </div>
@@ -434,17 +435,10 @@ const SectionedDrawingEditor = ({ blueprintModel, onBlueprintChange, onDrawingCo
         </button>
         
         <div className="section-indicator">
-          Step {currentSection + 1} of {sections.length}
+          Drawing Step {currentSection + 1} of {sections.length}
         </div>
         
-        {showWizardNavigation ? (
-          <button 
-            className="nav-btn finish-btn"
-            onClick={handleFinish}
-          >
-            Next Step →
-          </button>
-        ) : canGoNext ? (
+        {canGoNext ? (
           <button 
             className="nav-btn next-btn"
             onClick={handleNext}
