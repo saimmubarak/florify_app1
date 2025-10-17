@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { BlueprintModel } from './BlueprintModel';
 import SVGEditor from './SVGEditor';
 import SectionedDrawingEditor from './SectionedDrawingEditor';
+import BlueprintPDFDownloader from './BlueprintPDFDownloader';
 import HouseFrontSelector from './HouseFrontSelector';
 import WallConfigurator from './WallConfigurator';
 import PathwayEditor from './PathwayEditor';
@@ -27,9 +28,9 @@ const EmptyGardenWizard = ({ onClose, onGardenCreated, userEmail }) => {
     },
     { 
       number: 2, 
-      title: 'Add Details', 
-      description: 'Add house front and boundary walls',
-      component: 'details'
+      title: 'Download PDF', 
+      description: 'Download your blueprint as a PDF file',
+      component: 'download'
     },
     { 
       number: 3, 
@@ -139,19 +140,33 @@ const EmptyGardenWizard = ({ onClose, onGardenCreated, userEmail }) => {
       case 2:
         return (
           <div className="step-content">
-            <div className="step-section">
-              <h4>🏠 House Front</h4>
-              <HouseFrontSelector 
-                blueprintModel={blueprintModel}
-                onBlueprintChange={handleBlueprintChange}
-              />
-            </div>
-            <div className="step-section">
-              <h4>🧱 Boundary Walls</h4>
-              <WallConfigurator 
-                blueprintModel={blueprintModel}
-                onBlueprintChange={handleBlueprintChange}
-              />
+            <div className="pdf-download-section">
+              <h4>📄 Download Your Blueprint</h4>
+              <p>Your garden blueprint is ready! You can download it as a high-quality PDF file that's perfect for printing or sharing.</p>
+              
+              <div className="download-features">
+                <div className="feature-item">
+                  <span className="feature-icon">🖨️</span>
+                  <div className="feature-text">
+                    <strong>Print Ready</strong>
+                    <p>Optimized for A4 paper size</p>
+                  </div>
+                </div>
+                <div className="feature-item">
+                  <span className="feature-icon">🎨</span>
+                  <div className="feature-text">
+                    <strong>High Quality</strong>
+                    <p>Vector graphics for crisp printing</p>
+                  </div>
+                </div>
+                <div className="feature-item">
+                  <span className="feature-icon">📏</span>
+                  <div className="feature-text">
+                    <strong>Scale Information</strong>
+                    <p>Includes legend and measurements</p>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         );
@@ -192,6 +207,17 @@ const EmptyGardenWizard = ({ onClose, onGardenCreated, userEmail }) => {
   };
 
   const renderEditor = () => {
+    if (currentStep === 2) {
+      return (
+        <div className="editor-panel">
+          <BlueprintPDFDownloader
+            blueprintModel={blueprintModel}
+            gardenName={gardenName}
+          />
+        </div>
+      );
+    }
+    
     return (
       <div className="editor-panel">
         {useSectionedDrawing ? (

@@ -11,24 +11,87 @@ const SectionedDrawingEditor = ({ blueprintModel, onBlueprintChange }) => {
   const sections = [
     {
       id: 'buildings',
-      title: 'Draw Buildings',
+      title: 'Step 1: Draw Buildings',
       description: 'Draw the outline of your house and other buildings',
       color: '#e74c3c',
-      role: 'building'
+      role: 'building',
+      detailedGuidance: {
+        title: '🏠 Draw Your Buildings',
+        instructions: [
+          'Start by drawing the main house outline using the rectangle tool',
+          'Add any additional buildings like garages, sheds, or extensions',
+          'Use the line tool for irregular building shapes',
+          'Use the polygon tool for complex building outlines',
+          'Don\'t worry about doors and windows yet - we\'ll add those later',
+          'Make sure buildings are drawn to scale using the grid as a guide'
+        ],
+        tips: [
+          '💡 Tip: Use the grid lines to keep your buildings aligned',
+          '📏 Tip: A typical house might be 10-15 grid squares wide',
+          '🎯 Tip: You can always go back and edit shapes later'
+        ],
+        examples: [
+          'Example: Draw a rectangle for the main house',
+          'Example: Add a smaller rectangle for the garage',
+          'Example: Use lines to create an L-shaped house'
+        ]
+      }
     },
     {
       id: 'pathways',
-      title: 'Draw Pathways',
+      title: 'Step 2: Draw Pathways',
       description: 'Draw driveways, walkways, and paths',
       color: '#7f8c8d',
-      role: 'pathway'
+      role: 'pathway',
+      detailedGuidance: {
+        title: '🛤️ Draw Your Pathways',
+        instructions: [
+          'Draw the main driveway from the street to your house',
+          'Add walkways connecting different areas of your garden',
+          'Include paths to the front door, back door, and garden areas',
+          'Use the rectangle tool for wide driveways',
+          'Use the line tool for narrow walkways',
+          'Use the polygon tool for curved or irregular paths'
+        ],
+        tips: [
+          '💡 Tip: Driveways are usually 3-4 meters wide',
+          '📏 Tip: Walkways are typically 1-1.5 meters wide',
+          '🎯 Tip: Consider how people will move around your garden'
+        ],
+        examples: [
+          'Example: Draw a straight driveway from street to garage',
+          'Example: Add a curved path from driveway to front door',
+          'Example: Create a network of paths around the garden'
+        ]
+      }
     },
     {
       id: 'walls',
-      title: 'Draw Boundary Walls',
+      title: 'Step 3: Draw Boundary Walls',
       description: 'Draw walls and fences around your property',
       color: '#8e44ad',
-      role: 'boundary'
+      role: 'boundary',
+      detailedGuidance: {
+        title: '🧱 Draw Your Boundary Walls',
+        instructions: [
+          'Draw walls and fences around the perimeter of your property',
+          'Include any internal walls that divide different garden areas',
+          'Mark where gates and openings will be located',
+          'Use the line tool for straight walls and fences',
+          'Use the polygon tool for curved or irregular boundaries',
+          'Don\'t forget to leave space for gates and entrances'
+        ],
+        tips: [
+          '💡 Tip: Property boundaries are usually straight lines',
+          '📏 Tip: Leave 1-2 meter gaps for gates and entrances',
+          '🎯 Tip: Consider privacy and security when placing walls'
+        ],
+        examples: [
+          'Example: Draw a rectangular boundary around your property',
+          'Example: Add internal walls to separate different garden areas',
+          'Example: Leave gaps for gates and entrances'
+        ]
+      }
     }
   ];
 
@@ -310,15 +373,52 @@ const SectionedDrawingEditor = ({ blueprintModel, onBlueprintChange }) => {
       </div>
 
       <div className="drawing-instructions">
-        <p>
-          <strong>{drawingTool === 'line' ? 'Line Tool:' : drawingTool === 'rectangle' ? 'Rectangle Tool:' : 'Polygon Tool:'}</strong>
-          {drawingTool === 'line' && ' Click and drag to draw a line'}
-          {drawingTool === 'rectangle' && ' Click and drag to draw a rectangle'}
-          {drawingTool === 'polygon' && ' Click to add points, double-click to finish'}
-        </p>
-        <p style={{ color: currentSectionData.color, fontWeight: 'bold' }}>
-          Drawing with {currentSectionData.color} color
-        </p>
+        <div className="guidance-section">
+          <h4 style={{ color: currentSectionData.color, margin: '0 0 15px 0' }}>
+            {currentSectionData.detailedGuidance.title}
+          </h4>
+          
+          <div className="instructions-grid">
+            <div className="instructions-column">
+              <h5>📋 Instructions:</h5>
+              <ul>
+                {currentSectionData.detailedGuidance.instructions.map((instruction, index) => (
+                  <li key={index}>{instruction}</li>
+                ))}
+              </ul>
+            </div>
+            
+            <div className="tips-column">
+              <h5>💡 Tips:</h5>
+              <ul>
+                {currentSectionData.detailedGuidance.tips.map((tip, index) => (
+                  <li key={index}>{tip}</li>
+                ))}
+              </ul>
+            </div>
+            
+            <div className="examples-column">
+              <h5>🎯 Examples:</h5>
+              <ul>
+                {currentSectionData.detailedGuidance.examples.map((example, index) => (
+                  <li key={index}>{example}</li>
+                ))}
+              </ul>
+            </div>
+          </div>
+          
+          <div className="tool-instructions">
+            <p>
+              <strong>Current Tool: {drawingTool === 'line' ? 'Line Tool' : drawingTool === 'rectangle' ? 'Rectangle Tool' : 'Polygon Tool'}</strong>
+              {drawingTool === 'line' && ' - Click and drag to draw a line'}
+              {drawingTool === 'rectangle' && ' - Click and drag to draw a rectangle'}
+              {drawingTool === 'polygon' && ' - Click to add points, double-click to finish'}
+            </p>
+            <p style={{ color: currentSectionData.color, fontWeight: 'bold' }}>
+              Drawing with {currentSectionData.color} color
+            </p>
+          </div>
+        </div>
       </div>
 
       <div className="drawing-navigation">
