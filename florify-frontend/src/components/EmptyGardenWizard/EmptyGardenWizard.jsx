@@ -15,6 +15,7 @@ const EmptyGardenWizard = ({ onClose, onGardenCreated, userEmail }) => {
   const [blueprintData, setBlueprintData] = useState(blueprintModel.toJSON());
   const [editorMode, setEditorMode] = useState('draw');
   const [useSectionedDrawing, setUseSectionedDrawing] = useState(true);
+  const [drawingCompleted, setDrawingCompleted] = useState(false);
   const [gardenName, setGardenName] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -44,6 +45,12 @@ const EmptyGardenWizard = ({ onClose, onGardenCreated, userEmail }) => {
     setBlueprintData(newData);
   };
 
+  const handleDrawingComplete = () => {
+    setDrawingCompleted(true);
+    // Automatically advance to next step
+    nextStep();
+  };
+
   const nextStep = () => {
     if (currentStep < steps.length) {
       setCurrentStep(prev => prev + 1);
@@ -59,13 +66,11 @@ const EmptyGardenWizard = ({ onClose, onGardenCreated, userEmail }) => {
   const validateStep = (step) => {
     switch (step) {
       case 1:
-        return blueprintModel.data.templates.selected !== null;
+        return true; // Drawing step is always valid
       case 2:
-        return blueprintModel.getShapesByRole('boundary').length > 0;
+        return drawingCompleted || blueprintModel.data.shapes.length > 0; // Drawing completed or has shapes
       case 3:
-        return true; // Pathways are optional
-      case 4:
-        return gardenName.trim().length >= 2;
+        return gardenName.trim().length > 0; // Must have a name
       default:
         return false;
     }
@@ -132,6 +137,28 @@ const EmptyGardenWizard = ({ onClose, onGardenCreated, userEmail }) => {
                   <div className="mode-title">Free Drawing</div>
                   <div className="mode-desc">Draw freely with all tools</div>
                 </button>
+              </div>
+            </div>
+            
+            <div className="drawing-progress">
+              <h5>Drawing Progress</h5>
+              <div className="progress-info">
+                <div className="progress-item">
+                  <span className="progress-icon">🏠</span>
+                  <span>Buildings: {blueprintModel.getShapesByRole('building').length}</span>
+                </div>
+                <div className="progress-item">
+                  <span className="progress-icon">🛤️</span>
+                  <span>Pathways: {blueprintModel.getShapesByRole('pathway').length}</span>
+                </div>
+                <div className="progress-item">
+                  <span className="progress-icon">🧱</span>
+                  <span>Walls: {blueprintModel.getShapesByRole('boundary').length}</span>
+                </div>
+              </div>
+              
+              <div className="drawing-tips">
+                <p><strong>💡 Tip:</strong> You can proceed to the next step at any time, even if you haven't completed all drawing sections.</p>
               </div>
             </div>
           </div>
@@ -224,6 +251,8 @@ const EmptyGardenWizard = ({ onClose, onGardenCreated, userEmail }) => {
           <SectionedDrawingEditor
             blueprintModel={blueprintModel}
             onBlueprintChange={handleBlueprintChange}
+            onDrawingComplete={handleDrawingComplete}
+            showWizardNavigation={true}
           />
         ) : (
           <SVGEditor
